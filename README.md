@@ -100,6 +100,13 @@ aws_listener_rules:
     weight: 100
 ```
 
+# available resources
+- AWS
+  - Listener
+    - forward target group
+  - Listener Rule
+    - forward target group
+
 ## Why is named "Tentez"?
 A `tentetsuki` is `railroad switch` in Japanese. It is a mechanical device used to guide trains from one track to another. This tool switches traffic, like a "tentesuki".
 
