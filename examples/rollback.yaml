@@ -1,37 +1,9 @@
 steps:
-  # "type:pause" waits your acceptance.
-  # You enter "yes", Tentez will continue steps.
-  # If you'd like to interrupt steps, Ctrl+C or "quit".
-  - type: pause
-
-  # "type:switch" switches traffic weights.
-  # This example switches tentez-web, tentez-api, tentez-foo into old:new = 70:30.
+  # if you'd like to rollback, switch old:new = 100:0
   - type: switch
     weight:
-      old: 70
-      new: 30
-
-  # "type:sleep" waits `sleepSeconds`.
-  # Tentez continues steps after waiting `sleepSeconds`.
-  - type: sleep
-    sleepSeconds: 600
-
-  - type: pause
-
-  - type: switch
-    weight:
-      old: 30
-      new: 70
-  - type: sleep
-    sleepSeconds: 600
-  - type: pause
-
-  - type: switch
-    weight:
-      old: 0
-      new: 100
-  - type: sleep
-    sleepSeconds: 600
+      old: 1
+      new: 0
 
 aws_listener_rules:
   - name: tentez-web

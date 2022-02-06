@@ -1,6 +1,6 @@
 # Tentez
 
-This tool helps you switching traffic.
+Tentez helps you switching traffic.
 
 ## Usage
 ```console
@@ -52,8 +52,8 @@ Plan
 
 1 / 9 steps
 Pause
-You enter "yes", Tentez will continue steps.
-If you'd like to interrupt steps, Ctrl+C or "quit".
+enter "yes", continue steps.
+If you'd like to interrupt steps, enter "quit".
 > yes
 
 2 / 9 steps
@@ -61,42 +61,39 @@ Switch old:new = 70:30
 1. tentez-web switched!
 2. tentez-api switched!
 3. tentez-foo switched!
-switch all targets!
 
 3 / 9 steps
 Sleep 600s
 Resume at 2022-02-05 15:10:03
-remaining: 600s
+Remain: 600s
 ...
-remaining: 1s
-
+Remain: 1s
 Resume
-
-4 / 9 steps
-Pause
-You enter "yes", Tentez will continue steps.
-If you'd like to interrupt steps, Ctrl+C or "quit".
-> yes
 
 (...snip)
 
-apply complete!
+Apply complete!
 ```
 
 ```console
-# get target resources information.
+# get target resources' current states.
 $ tentez -f ./examples/example.yaml get
-tentez-web:
+aws_listeners:
+- target: arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:listener/app/my-lb/0123456789abcdef/0123456789abcdef
+  weights:
   - arn: arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/my-targets1/0123456789abcdef
     weight: 0
   - arn: arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/my-targets2/fedcba9876543210
     weight: 100
-tentez-api:
+aws_listener_rules:
+- target: arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:listener/app/my-lb/0123456789abcdef/0123456789abcdef/0123456789abcdef
+  weights:
   - arn: arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/my-targets1/0123456789abcdef
     weight: 0
   - arn: arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/my-targets2/fedcba9876543210
     weight: 100
-tentez-foo:
+- target: arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:listener/app/my-lb/0123456789abcdef/0123456789abcdef/0123456789abcdef
+  weights:
   - arn: arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/my-targets1/0123456789abcdef
     weight: 0
   - arn: arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:targetgroup/my-targets2/fedcba9876543210
