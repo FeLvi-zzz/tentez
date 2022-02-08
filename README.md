@@ -2,6 +2,15 @@
 
 Tentez helps you switching traffic.
 
+## Installation
+If you don't want to build from source go grab a [binary release](https://github.com/FeLvi-zzz/tentez/releases).
+
+or use `go install`
+
+```
+$ go install github.com/FeLvi-zzz/tentez/cmd/tentez@latest
+```
+
 ## Usage
 ```console
 # show plan
