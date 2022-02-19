@@ -3,7 +3,6 @@ package tentez
 import (
 	"flag"
 	"fmt"
-	"log"
 )
 
 func Run() error {
@@ -14,7 +13,7 @@ func Run() error {
 	cmd := flag.Arg(0)
 
 	if *filepath == "" {
-		log.Fatalf("filepath(-f option) must be set.")
+		return fmt.Errorf("filepath(-f option) must be set.")
 	}
 
 	yamlData, err := loadYaml(filepath)
