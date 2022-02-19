@@ -55,7 +55,7 @@ func sleep(sec int) {
 				fmt.Printf("\rRemain: %ds ", int(finishAt.Sub(t).Seconds()))
 
 			case <-tickerStop:
-				fmt.Println("")
+				fmt.Println("\a")
 				return
 			}
 		}
