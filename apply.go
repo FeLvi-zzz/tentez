@@ -55,7 +55,7 @@ func sleep(sec int) {
 				fmt.Printf("\rRemain: %ds ", int(finishAt.Sub(t).Seconds()))
 
 			case <-tickerStop:
-				fmt.Println("")
+				fmt.Println("\a")
 				return
 			}
 		}
@@ -168,6 +168,8 @@ func execSwitch(yamlData *YamlStruct, weight Weight) error {
 		}
 		fmt.Println("switched!")
 	}
+
+	fmt.Printf("Switched at %s\n", time.Now().Format("2006-01-02 15:04:05"))
 
 	return nil
 }
