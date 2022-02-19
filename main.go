@@ -6,6 +6,24 @@ import (
 )
 
 func Run() error {
+	flag.Usage = func() {
+		helpText := `
+Usage:
+  tentez -f <filename> <subcommand>
+
+Commands:
+  plan   Show steps how to apply
+  apply  Switch targets weights
+  get    Show current state of targets
+  help   Show this help
+
+Flags:
+  -f <filename>  Specify YAML file
+  -h             Show this help
+`
+		fmt.Println(helpText)
+	}
+
 	filepath := flag.String("f", "", "filepath")
 
 	flag.Parse()
@@ -31,7 +49,11 @@ func Run() error {
 		return Apply(yamlData)
 	case "get":
 		return Get(yamlData)
+	case "help", "":
+		flag.Usage()
+		return nil
 	default:
+		flag.Usage()
 		return fmt.Errorf(`Error: unknown command "%s"`, cmd)
 	}
 }
