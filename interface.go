@@ -5,5 +5,6 @@ type Target interface {
 	execSwitch(weight Weight) error
 }
 type Targets interface {
+	targetsSlice() []Target
 	fetchData() (interface{}, error)
 }

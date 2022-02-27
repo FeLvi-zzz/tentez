@@ -74,7 +74,7 @@ func execSwitch(targets map[string]Targets, weight Weight) error {
 
 	i := 0
 	for _, targetResouces := range targets {
-		for _, target := range targetResouces.(interface{}).([]Target) {
+		for _, target := range targetResouces.targetsSlice() {
 			i++
 
 			fmt.Printf("%d. %s ", i, target.getName())

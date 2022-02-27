@@ -23,7 +23,7 @@ type AwsListenerData struct {
 	Weights    []AwsTargetGroupTuple `yaml:"weights"`
 }
 
-func (listener AwsListener) execSwitch(weight Weight) error {
+func (l AwsListener) execSwitch(weight Weight) error {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		return err
@@ -35,18 +35,18 @@ func (listener AwsListener) execSwitch(weight Weight) error {
 	time.Sleep(1 * time.Second)
 
 	if _, err := elbv2svc.ModifyListener(context.TODO(), &elbv2.ModifyListenerInput{
-		ListenerArn: aws.String(listener.Target),
+		ListenerArn: aws.String(l.Target),
 		DefaultActions: []elbv2Types.Action{
 			{
 				Type: "forward",
 				ForwardConfig: &elbv2Types.ForwardActionConfig{
 					TargetGroups: []elbv2Types.TargetGroupTuple{
 						{
-							TargetGroupArn: aws.String(listener.Switch.Old),
+							TargetGroupArn: aws.String(l.Switch.Old),
 							Weight:         aws.Int32(weight.Old),
 						},
 						{
-							TargetGroupArn: aws.String(listener.Switch.New),
+							TargetGroupArn: aws.String(l.Switch.New),
 							Weight:         aws.Int32(weight.New),
 						},
 					},
@@ -64,8 +64,8 @@ func (l AwsListener) getName() string {
 	return l.Name
 }
 
-func (l AwsListeners) fetchData() (interface{}, error) {
-	if len(l) == 0 {
+func (ls AwsListeners) fetchData() (interface{}, error) {
+	if len(ls) == 0 {
 		return nil, nil
 	}
 
@@ -75,7 +75,7 @@ func (l AwsListeners) fetchData() (interface{}, error) {
 	}
 
 	listenerArns := []string{}
-	for _, listener := range l {
+	for _, listener := range ls {
 		listenerArns = append(listenerArns, listener.Target)
 	}
 
@@ -112,4 +112,11 @@ func (l AwsListeners) fetchData() (interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (ls AwsListeners) targetsSlice() (targets []Target) {
+	for _, target := range ls {
+		targets = append(targets, target)
+	}
+	return targets
 }

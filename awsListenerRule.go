@@ -60,8 +60,8 @@ func (r AwsListenerRule) getName() string {
 	return r.Name
 }
 
-func (rules AwsListenerRules) fetchData() (interface{}, error) {
-	if len(rules) == 0 {
+func (rs AwsListenerRules) fetchData() (interface{}, error) {
+	if len(rs) == 0 {
 		return nil, nil
 	}
 
@@ -71,7 +71,7 @@ func (rules AwsListenerRules) fetchData() (interface{}, error) {
 	}
 
 	ruleArns := []string{}
-	for _, rule := range rules {
+	for _, rule := range rs {
 		ruleArns = append(ruleArns, rule.Target)
 	}
 
@@ -108,4 +108,11 @@ func (rules AwsListenerRules) fetchData() (interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func (rs AwsListenerRules) targetsSlice() (targets []Target) {
+	for _, target := range rs {
+		targets = append(targets, target)
+	}
+	return targets
 }
