@@ -6,15 +6,24 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func loadYaml(filepath *string) (yamlStruct *YamlStruct, err error) {
-	data, err := ioutil.ReadFile(*filepath)
+func loadYaml(filepath string) (steps []Step, targets map[string]Targets, err error) {
+	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		return nil, err
+		return
 	}
 
-	if err := yaml.Unmarshal(data, &yamlStruct); err != nil {
-		return nil, err
+	yamlStruct := YamlStruct{}
+
+	if err = yaml.Unmarshal(data, &yamlStruct); err != nil {
+		return
 	}
 
-	return yamlStruct, nil
+	steps = yamlStruct.Steps
+
+	targets = map[string]Targets{}
+
+	targets["aws_listener_rules"] = yamlStruct.AwsListenerRules
+	targets["aws_listeners"] = yamlStruct.AwsListeners
+
+	return
 }

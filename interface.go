@@ -1,5 +1,9 @@
 package tentez
 
-type GetTargets interface {
-	FetchData() (interface{}, error)
+type Target interface {
+	getName() string
+	execSwitch(weight Weight) error
+}
+type Targets interface {
+	fetchData() (interface{}, error)
 }

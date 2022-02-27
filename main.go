@@ -5,9 +5,8 @@ import (
 	"fmt"
 )
 
-func Run() error {
-	flag.Usage = func() {
-		helpText := `
+func help() {
+	helpText := `
 Usage:
   tentez -f <filename> <subcommand>
 
@@ -21,39 +20,40 @@ Flags:
   -f <filename>  Specify YAML file
   -h             Show this help
 `
-		fmt.Println(helpText)
-	}
+	fmt.Println(helpText)
+}
 
-	filepath := flag.String("f", "", "filepath")
+func flagParse() (cmd string, filepath string, err error) {
+	flag.Usage = help
+
+	filepath = *flag.String("f", "", "filepath")
 
 	flag.Parse()
 
-	cmd := flag.Arg(0)
+	cmd = flag.Arg(0)
 
-	if *filepath == "" {
-		return fmt.Errorf("filepath(-f option) must be set.")
+	if filepath == "" {
+		err = fmt.Errorf("filepath(-f option) must be set")
 	}
 
-	yamlData, err := loadYaml(filepath)
+	return
+}
+
+func Run() error {
+	cmd, filepath, err := flagParse()
 	if err != nil {
 		return err
 	}
 
-	switch cmd {
-	case "plan":
-		return Plan(yamlData)
-	case "apply":
-		if err := Plan(yamlData); err != nil {
-			return err
-		}
-		return Apply(yamlData)
-	case "get":
-		return Get(yamlData)
-	case "help", "":
-		flag.Usage()
-		return nil
-	default:
-		flag.Usage()
-		return fmt.Errorf(`Error: unknown command "%s"`, cmd)
+	steps, targets, err := loadYaml(filepath)
+	if err != nil {
+		return err
 	}
+
+	t := tentez{
+		Steps:   steps,
+		Targets: targets,
+	}
+
+	return t.Exec(cmd)
 }
