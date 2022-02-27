@@ -5,27 +5,7 @@ import (
 	"fmt"
 )
 
-func help() {
-	helpText := `
-Usage:
-  tentez -f <filename> <subcommand>
-
-Commands:
-  plan   Show steps how to apply
-  apply  Switch targets weights
-  get    Show current state of targets
-  help   Show this help
-
-Flags:
-  -f <filename>  Specify YAML file
-  -h             Show this help
-`
-	fmt.Println(helpText)
-}
-
 func flagParse() (cmd string, filepath string, err error) {
-	flag.Usage = help
-
 	filepath = *flag.String("f", "", "filepath")
 
 	flag.Parse()
@@ -55,5 +35,5 @@ func Run() error {
 		Targets: targets,
 	}
 
-	return t.Exec(cmd)
+	return Exec(t, cmd)
 }

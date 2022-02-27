@@ -1,13 +1,23 @@
 package tentez
 
-import "fmt"
+import (
+	"flag"
+	"fmt"
+)
+
+type Tentez interface {
+	plan() error
+	apply() error
+	get() error
+	help()
+}
 
 type tentez struct {
 	Targets map[string]Targets
 	Steps   []Step
 }
 
-func (t tentez) Exec(cmd string) error {
+func Exec(t Tentez, cmd string) error {
 	switch cmd {
 	case "plan":
 		return t.plan()
@@ -19,10 +29,10 @@ func (t tentez) Exec(cmd string) error {
 	case "get":
 		return t.get()
 	case "help", "":
-		help()
+		t.help()
 		return nil
 	default:
-		help()
+		t.help()
 		return fmt.Errorf(`unknown command "%s"`, cmd)
 	}
 }
@@ -91,4 +101,23 @@ func (t tentez) get() (err error) {
 	}
 
 	return
+}
+
+func (t tentez) help() {
+	flag.Usage = t.help
+	helpText := `
+Usage:
+  tentez -f <filename> <subcommand>
+
+Commands:
+  plan   Show steps how to apply
+  apply  Switch targets weights
+  get    Show current state of targets
+  help   Show this help
+
+Flags:
+  -f <filename>  Specify YAML file
+  -h             Show this help
+`
+	fmt.Println(helpText)
 }
