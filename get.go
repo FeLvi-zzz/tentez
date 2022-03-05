@@ -6,8 +6,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func outputData(targets Targets, client Client) error {
-	targetsData, err := targets.fetchData(client)
+func outputData(targets Targets, cfg Config) error {
+	targetsData, err := targets.fetchData(cfg)
 	if err != nil {
 		return err
 	}
@@ -20,7 +20,7 @@ func outputData(targets Targets, client Client) error {
 		return err
 	}
 
-	fmt.Print(string(output))
+	fmt.Fprint(cfg.io.out, string(output))
 
 	return nil
 }

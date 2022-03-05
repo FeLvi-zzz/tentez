@@ -21,8 +21,8 @@ type AwsListenerRuleData struct {
 	Weights        []AwsTargetGroupTuple `yaml:"weights"`
 }
 
-func (r AwsListenerRule) execSwitch(weight Weight, client Client) error {
-	_, err := client.elbv2.ModifyRule(context.TODO(), &elbv2.ModifyRuleInput{
+func (r AwsListenerRule) execSwitch(weight Weight, cfg Config) error {
+	_, err := cfg.client.elbv2.ModifyRule(context.TODO(), &elbv2.ModifyRuleInput{
 		RuleArn: aws.String(r.Target),
 		Actions: []elbv2Types.Action{
 			{
@@ -50,7 +50,7 @@ func (r AwsListenerRule) getName() string {
 	return r.Name
 }
 
-func (rs AwsListenerRules) fetchData(client Client) (interface{}, error) {
+func (rs AwsListenerRules) fetchData(cfg Config) (interface{}, error) {
 	if len(rs) == 0 {
 		return nil, nil
 	}
@@ -60,7 +60,7 @@ func (rs AwsListenerRules) fetchData(client Client) (interface{}, error) {
 		ruleArns = append(ruleArns, rule.Target)
 	}
 
-	rulesData, err := client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
+	rulesData, err := cfg.client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
 		RuleArns: ruleArns,
 	})
 	if err != nil {

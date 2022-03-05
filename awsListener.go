@@ -22,11 +22,11 @@ type AwsListenerData struct {
 	Weights    []AwsTargetGroupTuple `yaml:"weights"`
 }
 
-func (l AwsListener) execSwitch(weight Weight, client Client) error {
+func (l AwsListener) execSwitch(weight Weight, cfg Config) error {
 	// avoid rate limit
 	time.Sleep(1 * time.Second)
 
-	_, err := client.elbv2.ModifyListener(context.TODO(), &elbv2.ModifyListenerInput{
+	_, err := cfg.client.elbv2.ModifyListener(context.TODO(), &elbv2.ModifyListenerInput{
 		ListenerArn: aws.String(l.Target),
 		DefaultActions: []elbv2Types.Action{
 			{
@@ -54,7 +54,7 @@ func (l AwsListener) getName() string {
 	return l.Name
 }
 
-func (ls AwsListeners) fetchData(client Client) (interface{}, error) {
+func (ls AwsListeners) fetchData(cfg Config) (interface{}, error) {
 	if len(ls) == 0 {
 		return nil, nil
 	}
@@ -64,7 +64,7 @@ func (ls AwsListeners) fetchData(client Client) (interface{}, error) {
 		listenerArns = append(listenerArns, listener.Target)
 	}
 
-	listenersData, err := client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
+	listenersData, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
 		ListenerArns: listenerArns,
 	})
 	if err != nil {

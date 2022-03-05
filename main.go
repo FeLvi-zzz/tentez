@@ -6,7 +6,7 @@ import (
 )
 
 func flagParse() (cmd string, filepath string, err error) {
-	filepath = *flag.String("f", "", "filepath")
+	flag.StringVar(&filepath, "f", "", "filepath")
 
 	flag.Parse()
 

@@ -2,9 +2,9 @@ package tentez
 
 type Target interface {
 	getName() string
-	execSwitch(weight Weight, client Client) error
+	execSwitch(weight Weight, cfg Config) error
 }
 type Targets interface {
 	targetsSlice() []Target
-	fetchData(client Client) (interface{}, error)
+	fetchData(cfg Config) (interface{}, error)
 }

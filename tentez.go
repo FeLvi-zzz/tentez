@@ -40,15 +40,15 @@ func Exec(t Tentez, cmd string) error {
 
 func (t tentez) apply() (err error) {
 	for i, step := range t.Steps {
-		fmt.Printf("\n%d / %d steps\n", i+1, len(t.Steps))
+		fmt.Fprintf(t.config.io.out, "\n%d / %d steps\n", i+1, len(t.Steps))
 
 		switch step.Type {
 		case "pause":
-			pause()
+			pause(t.config)
 		case "sleep":
-			sleep(step.SleepSeconds)
+			sleep(step.SleepSeconds, t.config)
 		case "switch":
-			err = execSwitch(t.Targets, step.Weight, t.config.client)
+			err = execSwitch(t.Targets, step.Weight, t.config)
 		default:
 			return fmt.Errorf(`unknown step type "%s"`, step.Type)
 		}
@@ -57,34 +57,34 @@ func (t tentez) apply() (err error) {
 			return err
 		}
 
-		fmt.Println("")
+		fmt.Fprintln(t.config.io.out, "")
 	}
 
-	fmt.Println("Apply complete!")
+	fmt.Fprintln(t.config.io.out, "Apply complete!")
 
 	return nil
 }
 
 func (t tentez) plan() error {
-	fmt.Println("Plan:")
+	fmt.Fprintln(t.config.io.out, "Plan:")
 	targetNames := getTargetNames(t.Targets)
 
 	for i, step := range t.Steps {
-		fmt.Printf("%d. ", i+1)
+		fmt.Fprintf(t.config.io.out, "%d. ", i+1)
 
 		switch step.Type {
 		case "pause":
-			fmt.Println("pause")
+			fmt.Fprintln(t.config.io.out, "pause")
 
 		case "switch":
 			weight := step.Weight
-			fmt.Printf("switch old:new = %d:%d\n", weight.Old, weight.New)
+			fmt.Fprintf(t.config.io.out, "switch old:new = %d:%d\n", weight.Old, weight.New)
 			for _, name := range targetNames {
-				fmt.Printf("  - %s\n", name)
+				fmt.Fprintf(t.config.io.out, "  - %s\n", name)
 			}
 
 		case "sleep":
-			fmt.Printf("sleep %ds\n", step.SleepSeconds)
+			fmt.Fprintf(t.config.io.out, "sleep %ds\n", step.SleepSeconds)
 
 		default:
 			return fmt.Errorf(`unknown step type "%s"`, step.Type)
@@ -96,7 +96,7 @@ func (t tentez) plan() error {
 
 func (t tentez) get() (err error) {
 	for _, targetResouces := range t.Targets {
-		if err = outputData(targetResouces, t.config.client); err != nil {
+		if err = outputData(targetResouces, t.config); err != nil {
 			return err
 		}
 	}
@@ -120,5 +120,5 @@ Flags:
   -f <filename>  Specify YAML file
   -h             Show this help
 `
-	fmt.Println(helpText)
+	fmt.Fprintln(t.config.io.out, helpText)
 }

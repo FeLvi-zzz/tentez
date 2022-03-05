@@ -1,6 +1,7 @@
 package tentez
 
 import (
+	"bytes"
 	"context"
 	"testing"
 
@@ -13,7 +14,7 @@ func (t targetsMock) targetsSlice() []Target {
 	return []Target{}
 }
 
-func (t targetsMock) fetchData(client Client) (interface{}, error) {
+func (t targetsMock) fetchData(cfg Config) (interface{}, error) {
 	return []Target{}, nil
 }
 
@@ -41,8 +42,15 @@ func TestExecSwitch(t *testing.T) {
 	targets := map[string]Targets{
 		"targets_mock": targetsMock{},
 	}
-	err := execSwitch(targets, Weight{}, Client{
-		elbv2: elbv2Mock{},
+	err := execSwitch(targets, Weight{}, Config{
+		client: Client{
+			elbv2: elbv2Mock{},
+		},
+		io: IOStreams{
+			in:  bytes.NewBufferString(""),
+			out: bytes.NewBufferString(""),
+			err: bytes.NewBufferString(""),
+		},
 	})
 
 	if err != nil {
