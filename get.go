@@ -6,8 +6,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func outputData(targets Targets) error {
-	targetsData, err := targets.fetchData()
+func outputData(targets Targets, client Client) error {
+	targetsData, err := targets.fetchData(client)
 	if err != nil {
 		return err
 	}

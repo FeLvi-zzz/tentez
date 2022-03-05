@@ -69,7 +69,7 @@ func sleep(sec int) {
 	fmt.Println("Resume")
 }
 
-func execSwitch(targets map[string]Targets, weight Weight) error {
+func execSwitch(targets map[string]Targets, weight Weight, client Client) error {
 	fmt.Printf("Switch old:new = %d:%d\n", weight.Old, weight.New)
 
 	i := 0
@@ -78,7 +78,7 @@ func execSwitch(targets map[string]Targets, weight Weight) error {
 			i++
 
 			fmt.Printf("%d. %s ", i, target.getName())
-			if err := target.execSwitch(weight); err != nil {
+			if err := target.execSwitch(weight, client); err != nil {
 				return err
 			}
 			fmt.Println("switched!")

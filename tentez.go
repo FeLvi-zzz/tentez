@@ -15,6 +15,7 @@ type Tentez interface {
 type tentez struct {
 	Targets map[string]Targets
 	Steps   []Step
+	config  Config
 }
 
 func Exec(t Tentez, cmd string) error {
@@ -47,7 +48,7 @@ func (t tentez) apply() (err error) {
 		case "sleep":
 			sleep(step.SleepSeconds)
 		case "switch":
-			err = execSwitch(t.Targets, step.Weight)
+			err = execSwitch(t.Targets, step.Weight, t.config.client)
 		default:
 			return fmt.Errorf(`unknown step type "%s"`, step.Type)
 		}
@@ -95,7 +96,7 @@ func (t tentez) plan() error {
 
 func (t tentez) get() (err error) {
 	for _, targetResouces := range t.Targets {
-		if err = outputData(targetResouces); err != nil {
+		if err = outputData(targetResouces, t.config.client); err != nil {
 			return err
 		}
 	}

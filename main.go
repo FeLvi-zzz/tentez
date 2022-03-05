@@ -30,9 +30,15 @@ func Run() error {
 		return err
 	}
 
+	config, err := newConfig()
+	if err != nil {
+		return err
+	}
+
 	t := tentez{
 		Steps:   steps,
 		Targets: targets,
+		config:  config,
 	}
 
 	return Exec(t, cmd)

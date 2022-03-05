@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elbv2Types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 )
@@ -23,18 +22,11 @@ type AwsListenerData struct {
 	Weights    []AwsTargetGroupTuple `yaml:"weights"`
 }
 
-func (l AwsListener) execSwitch(weight Weight) error {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		return err
-	}
-
-	elbv2svc := elbv2.NewFromConfig(cfg)
-
+func (l AwsListener) execSwitch(weight Weight, client Client) error {
 	// avoid rate limit
 	time.Sleep(1 * time.Second)
 
-	if _, err := elbv2svc.ModifyListener(context.TODO(), &elbv2.ModifyListenerInput{
+	_, err := client.elbv2.ModifyListener(context.TODO(), &elbv2.ModifyListenerInput{
 		ListenerArn: aws.String(l.Target),
 		DefaultActions: []elbv2Types.Action{
 			{
@@ -53,25 +45,18 @@ func (l AwsListener) execSwitch(weight Weight) error {
 				},
 			},
 		},
-	}); err != nil {
-		return err
-	}
+	})
 
-	return nil
+	return err
 }
 
 func (l AwsListener) getName() string {
 	return l.Name
 }
 
-func (ls AwsListeners) fetchData() (interface{}, error) {
+func (ls AwsListeners) fetchData(client Client) (interface{}, error) {
 	if len(ls) == 0 {
 		return nil, nil
-	}
-
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		return nil, err
 	}
 
 	listenerArns := []string{}
@@ -79,9 +64,7 @@ func (ls AwsListeners) fetchData() (interface{}, error) {
 		listenerArns = append(listenerArns, listener.Target)
 	}
 
-	elbv2svc := elbv2.NewFromConfig(cfg)
-
-	listenersData, err := elbv2svc.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
+	listenersData, err := client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
 		ListenerArns: listenerArns,
 	})
 	if err != nil {
