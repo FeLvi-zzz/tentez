@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/FeLvi-zzz/tentez"
+	"github.com/FeLvi-zzz/tentez/internal/cli"
 )
 
 func main() {
@@ -12,7 +12,7 @@ func main() {
 }
 
 func _main() int {
-	err := tentez.Run()
+	err := cli.Run()
 	if err != nil {
 		fmt.Println(err)
 		return 1

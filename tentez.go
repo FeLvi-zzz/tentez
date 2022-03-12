@@ -1,15 +1,13 @@
 package tentez
 
 import (
-	"flag"
 	"fmt"
 )
 
 type Tentez interface {
-	plan() error
-	apply() error
-	get() error
-	help()
+	Plan() error
+	Apply() error
+	Get() error
 }
 
 type tentez struct {
@@ -18,27 +16,7 @@ type tentez struct {
 	config  Config
 }
 
-func Exec(t Tentez, cmd string) error {
-	switch cmd {
-	case "plan":
-		return t.plan()
-	case "apply":
-		if err := t.plan(); err != nil {
-			return err
-		}
-		return t.apply()
-	case "get":
-		return t.get()
-	case "help", "":
-		t.help()
-		return nil
-	default:
-		t.help()
-		return fmt.Errorf(`unknown command "%s"`, cmd)
-	}
-}
-
-func (t tentez) apply() (err error) {
+func (t tentez) Apply() (err error) {
 	for i, step := range t.Steps {
 		fmt.Fprintf(t.config.io.out, "\n%d / %d steps\n", i+1, len(t.Steps))
 
@@ -65,7 +43,7 @@ func (t tentez) apply() (err error) {
 	return nil
 }
 
-func (t tentez) plan() error {
+func (t tentez) Plan() error {
 	fmt.Fprintln(t.config.io.out, "Plan:")
 	targetNames := getTargetNames(t.Targets)
 
@@ -94,7 +72,7 @@ func (t tentez) plan() error {
 	return nil
 }
 
-func (t tentez) get() (err error) {
+func (t tentez) Get() (err error) {
 	for _, targetResouces := range t.Targets {
 		if err = outputData(targetResouces, t.config); err != nil {
 			return err
@@ -102,23 +80,4 @@ func (t tentez) get() (err error) {
 	}
 
 	return
-}
-
-func (t tentez) help() {
-	flag.Usage = t.help
-	helpText := `
-Usage:
-  tentez -f <filename> <subcommand>
-
-Commands:
-  plan   Show steps how to apply
-  apply  Switch targets weights
-  get    Show current state of targets
-  help   Show this help
-
-Flags:
-  -f <filename>  Specify YAML file
-  -h             Show this help
-`
-	fmt.Fprintln(t.config.io.out, helpText)
 }
