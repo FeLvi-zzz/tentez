@@ -25,10 +25,11 @@ Usage:
   tentez [-f <filename>] <subcommand>
 
 Commands:
-  plan   Show steps how to apply
-  apply  Switch targets weights
-  get    Show current state of targets
-  help   Show this help
+  plan     Show steps how to apply
+  apply    Switch targets weights
+  get      Show current state of targets
+  rollback Rollback switch, switch old:new = 100:0
+  help     Show this help
 
 Flags:
   -f <filename>  Specify YAML file
@@ -46,7 +47,7 @@ func Run() error {
 	)
 
 	switch cmd {
-	case "plan", "apply", "get":
+	case "plan", "apply", "get", "rollback":
 		t, err = tentez.NewFromYaml(filepath)
 		if err != nil {
 			return err
@@ -61,6 +62,8 @@ func Run() error {
 			return err
 		}
 		return t.Apply()
+	case "rollback":
+		return t.Rollback()
 	case "get":
 		return t.Get()
 	case "help", "":

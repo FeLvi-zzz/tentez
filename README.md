@@ -109,6 +109,32 @@ aws_listener_rules:
     weight: 100
 ```
 
+```console
+# rollback
+$ tentez -f ./examples/example.yaml rollback
+1. pause
+2. switch old:new = 100:0
+  1. tentez-web
+  2. tentez-api
+  3. tentez-foo
+
+1 / 2 steps
+Pause
+enter "yes", continue steps.
+If you'd like to interrupt steps, enter "quit".
+> yes
+continue step
+
+2 / 2 steps
+Switch old:new = 100:0
+1. tentez-web switched!
+2. tentez-api switched!
+3. tentez-foo switched!
+Switched at 2022-03-12 12:05:30
+
+Apply complete!
+```
+
 # available resources
 - AWS
   - Listener
