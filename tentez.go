@@ -8,6 +8,7 @@ type Tentez interface {
 	Plan() error
 	Apply() error
 	Get() error
+	Rollback() error
 }
 
 type tentez struct {
@@ -80,4 +81,24 @@ func (t tentez) Get() (err error) {
 	}
 
 	return
+}
+
+func (t tentez) Rollback() (err error) {
+	t.Steps = []Step{
+		{
+			Type: "pause",
+		},
+		{
+			Type: "switch",
+			Weight: Weight{
+				Old: 100,
+				New: 0,
+			},
+		},
+	}
+
+	if err = t.Plan(); err != nil {
+		return err
+	}
+	return t.Apply()
 }
