@@ -112,9 +112,9 @@ aws_listener_rules:
 # available resources
 - AWS
   - Listener
-    - forward target group
+    - forward target group. for default LB listener rule.
   - Listener Rule
-    - forward target group
+    - forward target group. for except default LB listner rule.
 
 ## Why is named "Tentez"?
 A `tentetsuki` is `railroad switch` in Japanese. It is a mechanical device used to guide trains from one track to another. This tool switches traffic, like a "tentesuki".

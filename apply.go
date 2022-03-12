@@ -1,44 +1,38 @@
 package tentez
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-	elbv2Types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 )
 
-func pause() {
-	fmt.Println("Pause")
-	fmt.Println(`enter "yes", continue steps.`)
-	fmt.Println(`If you'd like to interrupt steps, enter "quit".`)
+func pause(cfg Config) {
+	fmt.Fprintln(cfg.io.out, "Pause")
+	fmt.Fprintln(cfg.io.out, `enter "yes", continue steps.`)
+	fmt.Fprintln(cfg.io.out, `If you'd like to interrupt steps, enter "quit".`)
 
 	for {
 		input := ""
-		fmt.Print("> ")
-		fmt.Scan(&input)
+		fmt.Fprint(cfg.io.out, "> ")
+		fmt.Fscan(cfg.io.in, &input)
 
 		if input == "yes" {
-			fmt.Println("continue step")
+			fmt.Fprintln(cfg.io.out, "continue step")
 			break
 		} else if input == "quit" {
-			fmt.Println("Bye")
+			fmt.Fprintln(cfg.io.out, "Bye")
 			os.Exit(0)
 		}
 	}
 }
 
-func sleep(sec int) {
+func sleep(sec int, cfg Config) {
 	seconds := time.Duration(sec) * time.Second
 	finishAt := time.Now().Add(seconds)
 
-	fmt.Printf("Sleep %ds\n", sec)
-	fmt.Printf("Resume at %s\n", finishAt.Format("2006-01-02 15:04:05"))
+	fmt.Fprintf(cfg.io.out, "Sleep %ds\n", sec)
+	fmt.Fprintf(cfg.io.out, "Resume at %s\n", finishAt.Format("2006-01-02 15:04:05"))
 
 	var wg sync.WaitGroup
 
@@ -52,10 +46,10 @@ func sleep(sec int) {
 		for {
 			select {
 			case t := <-ticker.C:
-				fmt.Printf("\rRemain: %ds ", int(finishAt.Sub(t).Seconds()))
+				fmt.Fprintf(cfg.io.out, "\rRemain: %ds ", int(finishAt.Sub(t).Seconds()))
 
 			case <-tickerStop:
-				fmt.Println("\a")
+				fmt.Fprintln(cfg.io.out, "\a")
 				return
 			}
 		}
@@ -72,131 +66,26 @@ func sleep(sec int) {
 
 	wg.Wait()
 
-	fmt.Println("Resume")
+	fmt.Fprintln(cfg.io.out, "Resume")
 }
 
-func (rule *AwsListenerRule) ExecSwitch(weight Weight) error {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		return err
-	}
-
-	elbv2svc := elbv2.NewFromConfig(cfg)
-
-	if _, err := elbv2svc.ModifyRule(context.TODO(), &elbv2.ModifyRuleInput{
-		RuleArn: aws.String(rule.Target),
-		Actions: []elbv2Types.Action{
-			{
-				Type: "forward",
-				ForwardConfig: &elbv2Types.ForwardActionConfig{
-					TargetGroups: []elbv2Types.TargetGroupTuple{
-						{
-							TargetGroupArn: aws.String(rule.Switch.Old),
-							Weight:         aws.Int32(weight.Old),
-						},
-						{
-							TargetGroupArn: aws.String(rule.Switch.New),
-							Weight:         aws.Int32(weight.New),
-						},
-					},
-				},
-			},
-		},
-	}); err != nil {
-		return err
-	}
-
-	return nil
-}
-func (listener *AwsListener) ExecSwitch(weight Weight) error {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		return err
-	}
-
-	elbv2svc := elbv2.NewFromConfig(cfg)
-
-	// avoid rate limit
-	time.Sleep(1 * time.Second)
-
-	if _, err := elbv2svc.ModifyListener(context.TODO(), &elbv2.ModifyListenerInput{
-		ListenerArn: aws.String(listener.Target),
-		DefaultActions: []elbv2Types.Action{
-			{
-				Type: "forward",
-				ForwardConfig: &elbv2Types.ForwardActionConfig{
-					TargetGroups: []elbv2Types.TargetGroupTuple{
-						{
-							TargetGroupArn: aws.String(listener.Switch.Old),
-							Weight:         aws.Int32(weight.Old),
-						},
-						{
-							TargetGroupArn: aws.String(listener.Switch.New),
-							Weight:         aws.Int32(weight.New),
-						},
-					},
-				},
-			},
-		},
-	}); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func execSwitch(yamlData *YamlStruct, weight Weight) error {
-	fmt.Printf("Switch old:new = %d:%d\n", weight.Old, weight.New)
+func execSwitch(targets map[string]Targets, weight Weight, cfg Config) error {
+	fmt.Fprintf(cfg.io.out, "Switch old:new = %d:%d\n", weight.Old, weight.New)
 
 	i := 0
-	for _, rule := range yamlData.AwsListenerRules {
-		i++
+	for _, targetResouces := range targets {
+		for _, target := range targetResouces.targetsSlice() {
+			i++
 
-		fmt.Printf("%d. %s ", i, rule.Name)
-		if err := rule.ExecSwitch(weight); err != nil {
-			return err
+			fmt.Fprintf(cfg.io.out, "%d. %s ", i, target.getName())
+			if err := target.execSwitch(weight, cfg); err != nil {
+				return err
+			}
+			fmt.Fprintln(cfg.io.out, "switched!")
 		}
-		fmt.Println("switched!")
 	}
 
-	for _, rule := range yamlData.AwsListeners {
-		i++
-
-		fmt.Printf("%d. %s ", i, rule.Name)
-		if err := rule.ExecSwitch(weight); err != nil {
-			return err
-		}
-		fmt.Println("switched!")
-	}
-
-	fmt.Printf("Switched at %s\n", time.Now().Format("2006-01-02 15:04:05"))
-
-	return nil
-}
-
-func Apply(yamlData *YamlStruct) (err error) {
-	for i, step := range yamlData.Steps {
-		fmt.Printf("\n%d / %d steps\n", i+1, len(yamlData.Steps))
-
-		switch step.Type {
-		case "pause":
-			pause()
-		case "sleep":
-			sleep(step.SleepSeconds)
-		case "switch":
-			err = execSwitch(yamlData, step.Weight)
-		default:
-			return fmt.Errorf(`Error: unknown step type "%s"`, step.Type)
-		}
-
-		if err != nil {
-			return err
-		}
-
-		fmt.Println("")
-	}
-
-	fmt.Println("Apply complete!")
+	fmt.Fprintf(cfg.io.out, "Switched at %s\n", time.Now().Format("2006-01-02 15:04:05"))
 
 	return nil
 }
