@@ -2,6 +2,7 @@ package tentez
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -22,6 +23,9 @@ type AwsListenerRuleData struct {
 }
 
 func (r AwsListenerRule) execSwitch(weight Weight, cfg Config) error {
+	// avoid rate limit
+	time.Sleep(1 * time.Second)
+
 	_, err := cfg.client.elbv2.ModifyRule(context.TODO(), &elbv2.ModifyRuleInput{
 		RuleArn: aws.String(r.Target),
 		Actions: []elbv2Types.Action{
