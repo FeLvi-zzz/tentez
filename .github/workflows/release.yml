@@ -1,33 +1,28 @@
 name: release
 
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [published]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
 
-      - name: Get the version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/}
+      - name: Install gobump
+        run: go get github.com/x-motemen/gobump/cmd/gobump
 
-      - name: Get commit summary
-        id: get_commit_summary
+      - name: bump version
         run: |
-          PREVIOUS_TAG=$(git tag --sort=-creatordate | sed -n 2p)
-          echo "PREVIOUS_TAG: $PREVIOUS_TAG"
-          COMMIT_SUMMARY="$(git log --oneline --pretty=tformat:"%h %s" $PREVIOUS_TAG..${{ github.ref }})"
-          COMMIT_SUMMARY="${COMMIT_SUMMARY//$'\n'/'%0A'}"
-          echo ::set-output name=COMMIT_SUMMARY::$COMMIT_SUMMARY
-
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.17
+          VERSION=${GITHUB_REF#refs/heads/}
+          gobump set ${VERSION#v} -w
+          git add version.go
+          git commit -m "[release] bump up ${VERSION}"
+          git tag -f ${VERSION}
+          git push origin main
+          git push origin ${VERSION}
 
       - name: Build
         run: make build_all
@@ -35,7 +30,4 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          name: ${{ steps.get_version.outputs.VERSION }}
           files: dist/*
-          body: |
-            ${{ steps.get_commit_summary.outputs.COMMIT_SUMMARY }}
