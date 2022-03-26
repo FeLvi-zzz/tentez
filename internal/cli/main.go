@@ -30,6 +30,7 @@ Commands:
   get      Show current state of targets
   rollback Rollback switch, switch old:new = 100:0
   help     Show this help
+	version  Show version
 
 Flags:
   -f <filename>  Specify YAML file
@@ -66,6 +67,9 @@ func Run() error {
 		return t.Rollback()
 	case "get":
 		return t.Get()
+	case "version":
+		fmt.Printf("tentez version: %s (rev: %s)\n", tentez.Version, tentez.Revision)
+		return nil
 	case "help", "":
 		help()
 		return nil
