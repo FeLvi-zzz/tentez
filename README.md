@@ -135,6 +135,12 @@ Switched at 2022-03-12 12:05:30
 Apply complete!
 ```
 
+```console
+# show version
+$ tentez version
+tentez version: x.x.x (rev: xxxxxxx)
+```
+
 # available resources
 - AWS
   - Listener
