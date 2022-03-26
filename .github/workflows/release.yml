@@ -18,7 +18,7 @@ jobs:
 
       - name: bump version
         run: |
-          VERSION=${GITHUB_REF#refs/heads/}
+          VERSION=${GITHUB_REF#refs/tags/}
 
           gobump set ${VERSION#v} -w
 
