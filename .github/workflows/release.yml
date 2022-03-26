@@ -30,9 +30,9 @@ jobs:
       - name: Commit updates
         uses: EndBug/add-and-commit@v9
         with:
-          branch: main
+          new_branch: main
           message: "[release] bump up ${{ steps.bump_version.outputs.VERSION }}"
-          add: "['version.go']"
+          add: "version.go"
           tag: "${{ steps.bump_version.outputs.VERSION }} --force"
           tag_push: "--force"
 
