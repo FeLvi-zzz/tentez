@@ -1,0 +1,30 @@
+- name: bug
+  description: Something isn't working
+  color: d73a4a
+- name: fix
+  description: fix something which isn't working
+  color: d73a4a
+
+- name: feature
+  description: Improvements or additions functions
+  color: 0075ca
+- name: enhancement
+  description: Improvements or additions to functions
+  color: 0075ca
+
+- name: chore
+  description: chores
+  color: cfd3d7
+- name: maintenance
+  description: maintenance
+  color: cfd3d7
+
+- name: major
+  description: bump major version
+  color: ed5e71
+- name: minor
+  description: bump minor version
+  color: 6820a3
+- name: patch
+  description: bump patch version
+  color: 4eaad8
