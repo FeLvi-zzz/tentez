@@ -18,6 +18,9 @@ jobs:
 
       - name: bump version
         run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+
           VERSION=${GITHUB_REF#refs/tags/}
 
           gobump set ${VERSION#v} -w
