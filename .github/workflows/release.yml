@@ -11,13 +11,13 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
 
-      - name: Install gobump
-        run: go get github.com/x-motemen/gobump/cmd/gobump
-
       - name: bump version
         run: |
           VERSION=${GITHUB_REF#refs/heads/}
+
+          go get github.com/x-motemen/gobump/cmd/gobump
           gobump set ${VERSION#v} -w
+
           git add version.go
           git commit -m "[release] bump up ${VERSION}"
           git tag -f ${VERSION}
