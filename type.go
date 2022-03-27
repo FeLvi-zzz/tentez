@@ -10,6 +10,17 @@ type Switch struct {
 	New string
 }
 
+func (s Switch) getType(t string) string {
+	switch t {
+	case s.Old:
+		return "old"
+	case s.New:
+		return "new"
+	default:
+		return "unknown"
+	}
+}
+
 type Step struct {
 	Type         string `yaml:"type"`
 	Weight       Weight `yaml:"weight"`
@@ -25,4 +36,5 @@ type YamlStruct struct {
 type AwsTargetGroupTuple struct {
 	TargetGroupArn string `yaml:"arn"`
 	Weight         int32  `yaml:"weight"`
+	Type           string `yaml:"type"`
 }

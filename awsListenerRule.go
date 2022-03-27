@@ -2,6 +2,7 @@ package tentez
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -18,6 +19,7 @@ type AwsListenerRule struct {
 type AwsListenerRules []AwsListenerRule
 
 type AwsListenerRuleData struct {
+	Name           string                `yaml:"name"`
 	ListnerRuleArn string                `yaml:"target"`
 	Weights        []AwsTargetGroupTuple `yaml:"weights"`
 }
@@ -60,8 +62,18 @@ func (rs AwsListenerRules) fetchData(cfg Config) (interface{}, error) {
 	}
 
 	ruleArns := []string{}
+	tgArns := []string{}
+	ruleMap := map[string]AwsListenerRule{}
 	for _, rule := range rs {
 		ruleArns = append(ruleArns, rule.Target)
+		tgArns = append(tgArns, rule.Switch.New, rule.Switch.Old)
+		ruleMap[rule.Target] = rule
+	}
+
+	if _, err := cfg.client.elbv2.DescribeTargetGroups(context.TODO(), &elbv2.DescribeTargetGroupsInput{
+		TargetGroupArns: tgArns,
+	}); err != nil {
+		fmt.Fprintln(cfg.io.err, err.Error())
 	}
 
 	rulesData, err := cfg.client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
@@ -80,14 +92,17 @@ func (rs AwsListenerRules) fetchData(cfg Config) (interface{}, error) {
 	for _, ruleData := range rulesData.Rules {
 		for _, action := range ruleData.Actions {
 			targetGroupTuples := []AwsTargetGroupTuple{}
+
 			for _, tgTuple := range action.ForwardConfig.TargetGroups {
 				targetGroupTuples = append(targetGroupTuples, AwsTargetGroupTuple{
+					Type:           ruleMap[*ruleData.RuleArn].Switch.getType(*tgTuple.TargetGroupArn),
 					TargetGroupArn: aws.ToString(tgTuple.TargetGroupArn),
 					Weight:         aws.ToInt32(tgTuple.Weight),
 				})
 			}
 
 			res.AwsListenerRules = append(res.AwsListenerRules, AwsListenerRuleData{
+				Name:           ruleMap[*ruleData.RuleArn].Name,
 				ListnerRuleArn: *ruleData.RuleArn,
 				Weights:        targetGroupTuples,
 			})
