@@ -2,6 +2,7 @@ package tentez
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -82,8 +83,14 @@ func TestGetTargetNames(t *testing.T) {
 
 	for _, c := range cases {
 		got := getTargetNames(c.targets)
+		sortSlice(c.expected)
+		sortSlice(got)
 		if !reflect.DeepEqual(c.expected, got) {
 			t.Errorf("expected %v, but got %v", c.expected, got)
 		}
 	}
+}
+
+func sortSlice(s []string) {
+	sort.Slice(s, func(i, j int) bool { return s[i] < s[j] })
 }

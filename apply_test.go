@@ -37,6 +37,9 @@ func (m elbv2Mock) DescribeRules(ctx context.Context, params *elbv2.DescribeRule
 func (m elbv2Mock) DescribeListeners(ctx context.Context, params *elbv2.DescribeListenersInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeListenersOutput, error) {
 	return &elbv2.DescribeListenersOutput{}, m.DescribeListenersError
 }
+func (m elbv2Mock) DescribeTargetGroups(ctx context.Context, params *elbv2.DescribeTargetGroupsInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeTargetGroupsOutput, error) {
+	return &elbv2.DescribeTargetGroupsOutput{}, m.DescribeListenersError
+}
 
 func TestExecSwitch(t *testing.T) {
 	targets := map[string]Targets{
