@@ -2,7 +2,7 @@ package tentez
 
 type Target interface {
 	getName() string
-	execSwitch(weight Weight, cfg Config) error
+	execSwitch(weight Weight, isForce bool, cfg Config) error
 }
 type Targets interface {
 	targetsSlice() []Target

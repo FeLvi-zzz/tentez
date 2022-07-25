@@ -1,5 +1,7 @@
 package tentez
 
+import "fmt"
+
 type Weight struct {
 	Old int32
 	New int32
@@ -37,4 +39,12 @@ type AwsTargetGroupTuple struct {
 	TargetGroupArn string `yaml:"arn"`
 	Weight         int32  `yaml:"weight"`
 	Type           string `yaml:"type"`
+}
+
+type SkipSwitchError struct {
+	Message string
+}
+
+func (s SkipSwitchError) Error() string {
+	return fmt.Sprintf("skip switching: %s", s.Message)
 }
