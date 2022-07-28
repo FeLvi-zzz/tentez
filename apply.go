@@ -1,6 +1,7 @@
 package tentez
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -79,8 +80,7 @@ func execSwitch(targets map[string]Targets, weight Weight, isForce bool, cfg Con
 
 			fmt.Fprintf(cfg.io.out, "%d. %s ", i, target.getName())
 			if err := target.execSwitch(weight, false, cfg); err != nil {
-				_, ok := err.(SkipSwitchError)
-				if !ok {
+				if !errors.As(err, &SkipSwitchError{}) {
 					return err
 				}
 				fmt.Fprintln(cfg.io.out, err.Error())
