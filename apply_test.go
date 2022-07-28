@@ -25,12 +25,10 @@ func (t targetMock) execSwitch(targetWeight Weight, isForce bool, cfg Config) er
 		return nil
 	}
 
-	weightSum := t.CurrentWeight.Old + t.CurrentWeight.New
-	targetWeightSum := targetWeight.New + targetWeight.Old
-	if float64(t.CurrentWeight.Old)/float64(weightSum) < float64(targetWeight.Old)/float64(targetWeightSum) {
+	if t.CurrentWeight.CalcOldRatio() < targetWeight.CalcOldRatio() {
 		return SkipSwitchError{"the old weight target is larger than current one."}
 	}
-	if float64(t.CurrentWeight.New)/float64(weightSum) > float64(targetWeight.New)/float64(targetWeightSum) {
+	if t.CurrentWeight.CalcNewRatio() > targetWeight.CalcNewRatio() {
 		return SkipSwitchError{"the new weight target is smaller than current one."}
 	}
 

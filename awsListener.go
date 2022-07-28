@@ -36,24 +36,23 @@ func (l AwsListener) execSwitch(targetWeight Weight, isForce bool, cfg Config) e
 			return err
 		}
 
-		targetGroupWeightMap := map[string]float64{}
+		tgWeight := Weight{}
 		for _, action := range listenerData.Listeners[0].DefaultActions {
 			for _, tgTuple := range action.ForwardConfig.TargetGroups {
-				targetGroupWeightMap[*tgTuple.TargetGroupArn] = float64(*tgTuple.Weight)
+				switch *tgTuple.TargetGroupArn {
+				case l.Switch.Old:
+					tgWeight.Old = *tgTuple.Weight
+				case l.Switch.New:
+					tgWeight.New = *tgTuple.Weight
+				}
 			}
 		}
-		weightSum := 0.0
-		for _, v := range targetGroupWeightMap {
-			weightSum += v
-		}
 
-		oldWeight, ok := targetGroupWeightMap[l.Switch.Old]
-		if !ok || oldWeight/weightSum < float64(targetWeight.Old)/float64(targetWeight.New+targetWeight.Old) {
+		if tgWeight.CalcOldRatio() < targetWeight.CalcOldRatio() {
 			return SkipSwitchError{"the old weight target is larger than current one."}
 		}
 
-		newWeight, ok := targetGroupWeightMap[l.Switch.New]
-		if ok && newWeight/weightSum > float64(targetWeight.New)/float64(targetWeight.New+targetWeight.Old) {
+		if tgWeight.CalcNewRatio() > targetWeight.CalcNewRatio() {
 			return SkipSwitchError{"the new weight target is smaller than current one."}
 		}
 	}

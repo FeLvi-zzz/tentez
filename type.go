@@ -7,6 +7,14 @@ type Weight struct {
 	New int32
 }
 
+func (w Weight) CalcOldRatio() float64 {
+	return float64(w.Old) / float64(w.New+w.Old)
+}
+
+func (w Weight) CalcNewRatio() float64 {
+	return float64(w.New) / float64(w.New+w.Old)
+}
+
 type Switch struct {
 	Old string
 	New string
