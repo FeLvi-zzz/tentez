@@ -64,7 +64,7 @@ func NewDummyActions() []types.Action {
 						Weight:         aws.Int32(50),
 					},
 					{
-						TargetGroupArn: aws.String("NewTarget"),
+						TargetGroupArn: aws.String("newTarget"),
 						Weight:         aws.Int32(50),
 					},
 				},
@@ -106,11 +106,15 @@ func (m elbv2Mock) DescribeTargetGroups(ctx context.Context, params *elbv2.Descr
 func TestExecSwitch(t *testing.T) {
 	cases := []struct {
 		Name         string
+		IsForce      bool
+		IsError      bool
 		Targets      map[string]Targets
 		TargetWeight Weight
 	}{
 		{
-			Name: "success",
+			Name:    "success",
+			IsError: false,
+			IsForce: false,
 			Targets: map[string]Targets{
 				"targets_mock": targetsMock([]targetMock{
 					{
@@ -128,7 +132,9 @@ func TestExecSwitch(t *testing.T) {
 			},
 		},
 		{
-			Name: "skip",
+			Name:    "skip",
+			IsError: false,
+			IsForce: false,
 			Targets: map[string]Targets{
 				"targets_mock": targetsMock([]targetMock{
 					{
@@ -148,7 +154,7 @@ func TestExecSwitch(t *testing.T) {
 	}
 	for _, c := range cases {
 		targets := c.Targets
-		err := execSwitch(targets, c.TargetWeight, false, Config{
+		err := execSwitch(targets, c.TargetWeight, c.IsForce, Config{
 			client: Client{
 				elbv2: elbv2Mock{},
 			},

@@ -79,7 +79,7 @@ func execSwitch(targets map[string]Targets, weight Weight, isForce bool, cfg Con
 			i++
 
 			fmt.Fprintf(cfg.io.out, "%d. %s ", i, target.getName())
-			if err := target.execSwitch(weight, false, cfg); err != nil {
+			if err := target.execSwitch(weight, isForce, cfg); err != nil {
 				if !errors.As(err, &SkipSwitchError{}) {
 					return err
 				}

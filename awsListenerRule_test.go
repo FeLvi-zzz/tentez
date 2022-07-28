@@ -123,9 +123,9 @@ func TestAwsListenerRules_fetchData(t *testing.T) {
 								Type:           "old",
 							},
 							{
-								TargetGroupArn: "NewTarget",
+								TargetGroupArn: "newTarget",
 								Weight:         50,
-								Type:           "unknown",
+								Type:           "new",
 							},
 						},
 					},
