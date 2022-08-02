@@ -12,12 +12,14 @@ import (
 func TestAwsListenerRule_execSwitch(t *testing.T) {
 	cases := []struct {
 		isError         bool
+		isForce         bool
 		awsListenerRule AwsListenerRule
 		weight          Weight
 		elbv2Mock       elbv2Mock
 	}{
 		{
 			isError: false,
+			isForce: false,
 			awsListenerRule: AwsListenerRule{
 				Name:   "success",
 				Target: "validTarget",
@@ -29,8 +31,9 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 		},
 		{
 			isError: true,
+			isForce: false,
 			awsListenerRule: AwsListenerRule{
-				Name:   "success",
+				Name:   "api_error",
 				Target: "validTarget",
 				Switch: Switch{
 					Old: "oldTarget",
@@ -45,10 +48,42 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 				ModifyRuleError: fmt.Errorf("error"),
 			},
 		},
+		{
+			isError: true,
+			isForce: false,
+			awsListenerRule: AwsListenerRule{
+				Name:   "skip_switch_error",
+				Target: "validTarget",
+				Switch: Switch{
+					Old: "oldTarget",
+					New: "newTarget",
+				},
+			},
+			weight: Weight{
+				Old: 100,
+				New: 0,
+			},
+		},
+		{
+			isError: false,
+			isForce: true,
+			awsListenerRule: AwsListenerRule{
+				Name:   "success_force_switch",
+				Target: "validTarget",
+				Switch: Switch{
+					Old: "oldTarget",
+					New: "newTarget",
+				},
+			},
+			weight: Weight{
+				Old: 100,
+				New: 0,
+			},
+		},
 	}
 
 	for _, c := range cases {
-		err := c.awsListenerRule.execSwitch(c.weight, Config{
+		err := c.awsListenerRule.execSwitch(c.weight, c.isForce, Config{
 			client: Client{
 				elbv2: c.elbv2Mock,
 			},
@@ -60,7 +95,7 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 		})
 
 		if c.isError != (err != nil) {
-			t.Errorf("expect isError == %t, but got %v", c.isError, err)
+			t.Errorf("%s: expect isError == %t, but got %v", c.awsListenerRule.Name, c.isError, err)
 		}
 	}
 }
@@ -76,7 +111,26 @@ func TestAwsListenerRules_fetchData(t *testing.T) {
 			isError: false,
 			expect: struct {
 				AwsListenerRules []AwsListenerRuleData `yaml:"aws_listener_rules"`
-			}{},
+			}{
+				AwsListenerRules: []AwsListenerRuleData{
+					{
+						Name:            "success",
+						ListenerRuleArn: "validTarget",
+						Weights: []AwsTargetGroupTuple{
+							{
+								TargetGroupArn: "oldTarget",
+								Weight:         50,
+								Type:           "old",
+							},
+							{
+								TargetGroupArn: "newTarget",
+								Weight:         50,
+								Type:           "new",
+							},
+						},
+					},
+				},
+			},
 			awsListenerRules: AwsListenerRules{
 				AwsListenerRule{
 					Name:   "success",

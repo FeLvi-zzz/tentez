@@ -24,9 +24,38 @@ type AwsListenerData struct {
 	Weights    []AwsTargetGroupTuple `yaml:"weights"`
 }
 
-func (l AwsListener) execSwitch(weight Weight, cfg Config) error {
+func (l AwsListener) execSwitch(targetWeight Weight, isForce bool, cfg Config) error {
 	// avoid rate limit
 	time.Sleep(1 * time.Second)
+
+	if !isForce {
+		listenerData, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
+			ListenerArns: []string{l.Target},
+		})
+		if err != nil {
+			return err
+		}
+
+		tgWeight := Weight{}
+		for _, action := range listenerData.Listeners[0].DefaultActions {
+			for _, tgTuple := range action.ForwardConfig.TargetGroups {
+				switch *tgTuple.TargetGroupArn {
+				case l.Switch.Old:
+					tgWeight.Old = *tgTuple.Weight
+				case l.Switch.New:
+					tgWeight.New = *tgTuple.Weight
+				}
+			}
+		}
+
+		if tgWeight.CalcOldRatio() < targetWeight.CalcOldRatio() {
+			return SkipSwitchError{"the old weight target is larger than current one."}
+		}
+
+		if tgWeight.CalcNewRatio() > targetWeight.CalcNewRatio() {
+			return SkipSwitchError{"the new weight target is smaller than current one."}
+		}
+	}
 
 	_, err := cfg.client.elbv2.ModifyListener(context.TODO(), &elbv2.ModifyListenerInput{
 		ListenerArn: aws.String(l.Target),
@@ -37,11 +66,11 @@ func (l AwsListener) execSwitch(weight Weight, cfg Config) error {
 					TargetGroups: []elbv2Types.TargetGroupTuple{
 						{
 							TargetGroupArn: aws.String(l.Switch.Old),
-							Weight:         aws.Int32(weight.Old),
+							Weight:         aws.Int32(targetWeight.Old),
 						},
 						{
 							TargetGroupArn: aws.String(l.Switch.New),
-							Weight:         aws.Int32(weight.New),
+							Weight:         aws.Int32(targetWeight.New),
 						},
 					},
 				},

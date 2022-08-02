@@ -12,12 +12,14 @@ import (
 func TestAwsListener_execSwitch(t *testing.T) {
 	cases := []struct {
 		isError     bool
+		isForce     bool
 		awsListener AwsListener
 		weight      Weight
 		elbv2Mock   elbv2Mock
 	}{
 		{
 			isError: false,
+			isForce: false,
 			awsListener: AwsListener{
 				Name:   "success",
 				Target: "validTarget",
@@ -29,8 +31,9 @@ func TestAwsListener_execSwitch(t *testing.T) {
 		},
 		{
 			isError: true,
+			isForce: false,
 			awsListener: AwsListener{
-				Name:   "success",
+				Name:   "api_error",
 				Target: "validTarget",
 				Switch: Switch{
 					Old: "oldTarget",
@@ -45,10 +48,42 @@ func TestAwsListener_execSwitch(t *testing.T) {
 				ModifyListenerError: fmt.Errorf("error"),
 			},
 		},
+		{
+			isError: true,
+			isForce: false,
+			awsListener: AwsListener{
+				Name:   "skip_switch_error",
+				Target: "validTarget",
+				Switch: Switch{
+					Old: "oldTarget",
+					New: "newTarget",
+				},
+			},
+			weight: Weight{
+				Old: 100,
+				New: 0,
+			},
+		},
+		{
+			isError: false,
+			isForce: true,
+			awsListener: AwsListener{
+				Name:   "success_force_switch",
+				Target: "validTarget",
+				Switch: Switch{
+					Old: "oldTarget",
+					New: "newTarget",
+				},
+			},
+			weight: Weight{
+				Old: 100,
+				New: 0,
+			},
+		},
 	}
 
 	for _, c := range cases {
-		err := c.awsListener.execSwitch(c.weight, Config{
+		err := c.awsListener.execSwitch(c.weight, c.isForce, Config{
 			client: Client{
 				elbv2: c.elbv2Mock,
 			},
@@ -60,7 +95,7 @@ func TestAwsListener_execSwitch(t *testing.T) {
 		})
 
 		if c.isError != (err != nil) {
-			t.Errorf("expect isError == %t, but got %v", c.isError, err)
+			t.Errorf("%s: expect isError == %t, but got %v", c.awsListener.Name, c.isError, err)
 		}
 	}
 }
@@ -76,7 +111,26 @@ func TestAwsListeners_fetchData(t *testing.T) {
 			isError: false,
 			expect: struct {
 				AwsListeners []AwsListenerData `yaml:"aws_listeners"`
-			}{},
+			}{
+				AwsListeners: []AwsListenerData{
+					{
+						Name:       "success",
+						ListnerArn: "validTarget",
+						Weights: []AwsTargetGroupTuple{
+							{
+								TargetGroupArn: "oldTarget",
+								Weight:         50,
+								Type:           "old",
+							},
+							{
+								TargetGroupArn: "newTarget",
+								Weight:         50,
+								Type:           "new",
+							},
+						},
+					},
+				},
+			},
 			awsListeners: AwsListeners{
 				AwsListener{
 					Name:   "success",

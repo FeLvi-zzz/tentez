@@ -1,8 +1,18 @@
 package tentez
 
+import "fmt"
+
 type Weight struct {
 	Old int32
 	New int32
+}
+
+func (w Weight) CalcOldRatio() float64 {
+	return float64(w.Old) / float64(w.New+w.Old)
+}
+
+func (w Weight) CalcNewRatio() float64 {
+	return float64(w.New) / float64(w.New+w.Old)
 }
 
 type Switch struct {
@@ -37,4 +47,12 @@ type AwsTargetGroupTuple struct {
 	TargetGroupArn string `yaml:"arn"`
 	Weight         int32  `yaml:"weight"`
 	Type           string `yaml:"type"`
+}
+
+type SkipSwitchError struct {
+	Message string
+}
+
+func (s SkipSwitchError) Error() string {
+	return fmt.Sprintf("skip switching: %s", s.Message)
 }

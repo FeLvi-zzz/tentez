@@ -62,7 +62,7 @@ func Run() error {
 		if err := t.Plan(); err != nil {
 			return err
 		}
-		return t.Apply()
+		return t.Apply(false)
 	case "rollback":
 		return t.Rollback()
 	case "get":

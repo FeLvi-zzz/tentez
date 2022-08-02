@@ -1,6 +1,7 @@
 package tentez
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sync"
@@ -69,7 +70,7 @@ func sleep(sec int, cfg Config) {
 	fmt.Fprintln(cfg.io.out, "Resume")
 }
 
-func execSwitch(targets map[string]Targets, weight Weight, cfg Config) error {
+func execSwitch(targets map[string]Targets, weight Weight, isForce bool, cfg Config) error {
 	fmt.Fprintf(cfg.io.out, "Switch old:new = %d:%d\n", weight.Old, weight.New)
 
 	i := 0
@@ -78,10 +79,14 @@ func execSwitch(targets map[string]Targets, weight Weight, cfg Config) error {
 			i++
 
 			fmt.Fprintf(cfg.io.out, "%d. %s ", i, target.getName())
-			if err := target.execSwitch(weight, cfg); err != nil {
-				return err
+			if err := target.execSwitch(weight, isForce, cfg); err != nil {
+				if !errors.As(err, &SkipSwitchError{}) {
+					return err
+				}
+				fmt.Fprintln(cfg.io.out, err.Error())
+			} else {
+				fmt.Fprintln(cfg.io.out, "switched!")
 			}
-			fmt.Fprintln(cfg.io.out, "switched!")
 		}
 	}
 

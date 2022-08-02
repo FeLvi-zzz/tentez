@@ -6,7 +6,7 @@ import (
 
 type Tentez interface {
 	Plan() error
-	Apply() error
+	Apply(isForce bool) error
 	Get() error
 	Rollback() error
 }
@@ -17,7 +17,7 @@ type tentez struct {
 	config  Config
 }
 
-func (t tentez) Apply() (err error) {
+func (t tentez) Apply(isForce bool) (err error) {
 	for i, step := range t.Steps {
 		fmt.Fprintf(t.config.io.out, "\n%d / %d steps\n", i+1, len(t.Steps))
 
@@ -27,7 +27,7 @@ func (t tentez) Apply() (err error) {
 		case "sleep":
 			sleep(step.SleepSeconds, t.config)
 		case "switch":
-			err = execSwitch(t.Targets, step.Weight, t.config)
+			err = execSwitch(t.Targets, step.Weight, isForce, t.config)
 		default:
 			return fmt.Errorf(`unknown step type "%s"`, step.Type)
 		}
@@ -100,5 +100,5 @@ func (t tentez) Rollback() (err error) {
 	if err = t.Plan(); err != nil {
 		return err
 	}
-	return t.Apply()
+	return t.Apply(true)
 }
