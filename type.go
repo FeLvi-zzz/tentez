@@ -2,6 +2,13 @@ package tentez
 
 import "fmt"
 
+type TargetType string
+
+const (
+	TargetTypeAwsListener     TargetType = "aws_listeners"
+	TargetTypeAwsListenerRule TargetType = "aws_listener_rules"
+)
+
 type Weight struct {
 	Old int32
 	New int32
@@ -32,10 +39,18 @@ func (s Switch) getType(t string) string {
 }
 
 type Step struct {
-	Type         string `yaml:"type"`
-	Weight       Weight `yaml:"weight"`
-	SleepSeconds int    `yaml:"sleepSeconds"`
+	Type         StepType `yaml:"type"`
+	Weight       Weight   `yaml:"weight"`
+	SleepSeconds int      `yaml:"sleepSeconds"`
 }
+
+type StepType string
+
+const (
+	StepTypePause  StepType = "pause"
+	StepTypeSleep  StepType = "sleep"
+	StepTypeSwitch StepType = "switch"
+)
 
 type YamlStruct struct {
 	Steps            []Step           `yaml:"steps"`

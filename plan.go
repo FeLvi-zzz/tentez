@@ -1,6 +1,6 @@
 package tentez
 
-func getTargetNames(targets map[string]Targets) []string {
+func getTargetNames(targets map[TargetType]Targets) []string {
 	targetNames := []string{}
 
 	for _, targetResources := range targets {
