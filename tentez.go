@@ -17,6 +17,19 @@ type tentez struct {
 	config  Config
 }
 
+func New(targets map[TargetType]Targets, steps []Step) (tentez, error) {
+	config, err := newConfig()
+	if err != nil {
+		return tentez{}, err
+	}
+
+	return tentez{
+		Targets: targets,
+		Steps:   steps,
+		config:  config,
+	}, nil
+}
+
 func (t tentez) Apply(isForce bool) (err error) {
 	for i, step := range t.Steps {
 		fmt.Fprintf(t.config.io.out, "\n%d / %d steps\n", i+1, len(t.Steps))
