@@ -8,16 +8,16 @@ import (
 
 func TestGetTargetNames(t *testing.T) {
 	cases := []struct {
-		targets  map[string]Targets
+		targets  map[TargetType]Targets
 		expected []string
 	}{
 		{
-			map[string]Targets{},
+			map[TargetType]Targets{},
 			[]string{},
 		},
 		{
-			map[string]Targets{
-				"aws_listener_rules": AwsListenerRules{
+			map[TargetType]Targets{
+				TargetTypeAwsListenerRule: AwsListenerRules{
 					AwsListenerRule{
 						Name:   "hoge",
 						Target: "arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:listener/app/my-lb/0123456789abcdef/0123456789abcdef/0123456789abcdef",
@@ -39,8 +39,8 @@ func TestGetTargetNames(t *testing.T) {
 			[]string{"hoge", "foo"},
 		},
 		{
-			map[string]Targets{
-				"aws_listener_rules": AwsListenerRules{
+			map[TargetType]Targets{
+				TargetTypeAwsListenerRule: AwsListenerRules{
 					AwsListenerRule{
 						Name:   "hoge",
 						Target: "arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:listener/app/my-lb/0123456789abcdef/0123456789abcdef/0123456789abcdef",
@@ -58,7 +58,7 @@ func TestGetTargetNames(t *testing.T) {
 						},
 					},
 				},
-				"aws_listeners": AwsListeners{
+				TargetTypeAwsListener: AwsListeners{
 					AwsListener{
 						Name:   "hoge",
 						Target: "arn:aws:elasticloadbalancing:ap-northeast-1:123456789012:listener/app/my-lb/0123456789abcdef/0123456789abcdef/0123456789abcdef",

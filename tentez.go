@@ -12,9 +12,22 @@ type Tentez interface {
 }
 
 type tentez struct {
-	Targets map[string]Targets
+	Targets map[TargetType]Targets
 	Steps   []Step
 	config  Config
+}
+
+func New(targets map[TargetType]Targets, steps []Step) (tentez, error) {
+	config, err := newConfig()
+	if err != nil {
+		return tentez{}, err
+	}
+
+	return tentez{
+		Targets: targets,
+		Steps:   steps,
+		config:  config,
+	}, nil
 }
 
 func (t tentez) Apply(isForce bool) (err error) {
@@ -22,11 +35,11 @@ func (t tentez) Apply(isForce bool) (err error) {
 		fmt.Fprintf(t.config.io.out, "\n%d / %d steps\n", i+1, len(t.Steps))
 
 		switch step.Type {
-		case "pause":
+		case StepTypePause:
 			pause(t.config)
-		case "sleep":
+		case StepTypeSleep:
 			sleep(step.SleepSeconds, t.config)
-		case "switch":
+		case StepTypeSwitch:
 			err = execSwitch(t.Targets, step.Weight, isForce, t.config)
 		default:
 			return fmt.Errorf(`unknown step type "%s"`, step.Type)
@@ -52,17 +65,17 @@ func (t tentez) Plan() error {
 		fmt.Fprintf(t.config.io.out, "%d. ", i+1)
 
 		switch step.Type {
-		case "pause":
+		case StepTypePause:
 			fmt.Fprintln(t.config.io.out, "pause")
 
-		case "switch":
+		case StepTypeSwitch:
 			weight := step.Weight
 			fmt.Fprintf(t.config.io.out, "switch old:new = %d:%d\n", weight.Old, weight.New)
 			for _, name := range targetNames {
 				fmt.Fprintf(t.config.io.out, "  - %s\n", name)
 			}
 
-		case "sleep":
+		case StepTypeSleep:
 			fmt.Fprintf(t.config.io.out, "sleep %ds\n", step.SleepSeconds)
 
 		default:
@@ -86,10 +99,10 @@ func (t tentez) Get() (err error) {
 func (t tentez) Rollback() (err error) {
 	t.Steps = []Step{
 		{
-			Type: "pause",
+			Type: StepTypePause,
 		},
 		{
-			Type: "switch",
+			Type: StepTypeSwitch,
 			Weight: Weight{
 				Old: 100,
 				New: 0,

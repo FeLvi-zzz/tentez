@@ -22,17 +22,11 @@ func NewFromYaml(filepath string) (t Tentez, err error) {
 		return
 	}
 
-	config, err := newConfig()
-	if err != nil {
-		return nil, err
-	}
-
-	return tentez{
-		Steps: yamlStruct.Steps,
-		Targets: map[string]Targets{
-			"aws_listener_rules": yamlStruct.AwsListenerRules,
-			"aws_listeners":      yamlStruct.AwsListeners,
+	return New(
+		map[TargetType]Targets{
+			TargetTypeAwsListenerRule: yamlStruct.AwsListenerRules,
+			TargetTypeAwsListener:     yamlStruct.AwsListeners,
 		},
-		config: config,
-	}, nil
+		yamlStruct.Steps,
+	)
 }

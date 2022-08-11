@@ -108,14 +108,14 @@ func TestExecSwitch(t *testing.T) {
 		Name         string
 		IsForce      bool
 		IsError      bool
-		Targets      map[string]Targets
+		Targets      map[TargetType]Targets
 		TargetWeight Weight
 	}{
 		{
 			Name:    "success",
 			IsError: false,
 			IsForce: false,
-			Targets: map[string]Targets{
+			Targets: map[TargetType]Targets{
 				"targets_mock": targetsMock([]targetMock{
 					{
 						Name: "target_mock",
@@ -135,7 +135,7 @@ func TestExecSwitch(t *testing.T) {
 			Name:    "skip",
 			IsError: false,
 			IsForce: false,
-			Targets: map[string]Targets{
+			Targets: map[TargetType]Targets{
 				"targets_mock": targetsMock([]targetMock{
 					{
 						Name: "target_mock",

@@ -70,7 +70,7 @@ func sleep(sec int, cfg Config) {
 	fmt.Fprintln(cfg.io.out, "Resume")
 }
 
-func execSwitch(targets map[string]Targets, weight Weight, isForce bool, cfg Config) error {
+func execSwitch(targets map[TargetType]Targets, weight Weight, isForce bool, cfg Config) error {
 	fmt.Fprintf(cfg.io.out, "Switch old:new = %d:%d\n", weight.Old, weight.New)
 
 	i := 0
