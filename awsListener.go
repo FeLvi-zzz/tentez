@@ -85,7 +85,7 @@ func (l AwsListener) getName() string {
 	return l.Name
 }
 
-func (ls AwsListeners) fetchData(cfg Config) (interface{}, error) {
+func (ls AwsListeners) fetchData(cfg Config) (TargetsData, error) {
 	if len(ls) == 0 {
 		return nil, nil
 	}
@@ -112,11 +112,7 @@ func (ls AwsListeners) fetchData(cfg Config) (interface{}, error) {
 		return nil, err
 	}
 
-	res := struct {
-		AwsListeners []AwsListenerData `yaml:"aws_listeners"`
-	}{
-		AwsListeners: []AwsListenerData{},
-	}
+	res := []AwsListenerData{}
 
 	for _, listenerData := range listenersData.Listeners {
 		for _, action := range listenerData.DefaultActions {
@@ -129,7 +125,7 @@ func (ls AwsListeners) fetchData(cfg Config) (interface{}, error) {
 				})
 			}
 
-			res.AwsListeners = append(res.AwsListeners, AwsListenerData{
+			res = append(res, AwsListenerData{
 				Name:       listenerMap[*listenerData.ListenerArn].Name,
 				ListnerArn: *listenerData.ListenerArn,
 				Weights:    targetGroupTuples,

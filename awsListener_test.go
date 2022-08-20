@@ -109,24 +109,20 @@ func TestAwsListeners_fetchData(t *testing.T) {
 	}{
 		{
 			isError: false,
-			expect: struct {
-				AwsListeners []AwsListenerData `yaml:"aws_listeners"`
-			}{
-				AwsListeners: []AwsListenerData{
-					{
-						Name:       "success",
-						ListnerArn: "validTarget",
-						Weights: []AwsTargetGroupTuple{
-							{
-								TargetGroupArn: "oldTarget",
-								Weight:         50,
-								Type:           "old",
-							},
-							{
-								TargetGroupArn: "newTarget",
-								Weight:         50,
-								Type:           "new",
-							},
+			expect: []AwsListenerData{
+				{
+					Name:       "success",
+					ListnerArn: "validTarget",
+					Weights: []AwsTargetGroupTuple{
+						{
+							TargetGroupArn: "oldTarget",
+							Weight:         50,
+							Type:           "old",
+						},
+						{
+							TargetGroupArn: "newTarget",
+							Weight:         50,
+							Type:           "new",
 						},
 					},
 				},

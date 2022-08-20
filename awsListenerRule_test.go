@@ -109,24 +109,20 @@ func TestAwsListenerRules_fetchData(t *testing.T) {
 	}{
 		{
 			isError: false,
-			expect: struct {
-				AwsListenerRules []AwsListenerRuleData `yaml:"aws_listener_rules"`
-			}{
-				AwsListenerRules: []AwsListenerRuleData{
-					{
-						Name:            "success",
-						ListenerRuleArn: "validTarget",
-						Weights: []AwsTargetGroupTuple{
-							{
-								TargetGroupArn: "oldTarget",
-								Weight:         50,
-								Type:           "old",
-							},
-							{
-								TargetGroupArn: "newTarget",
-								Weight:         50,
-								Type:           "new",
-							},
+			expect: []AwsListenerRuleData{
+				{
+					Name:            "success",
+					ListenerRuleArn: "validTarget",
+					Weights: []AwsTargetGroupTuple{
+						{
+							TargetGroupArn: "oldTarget",
+							Weight:         50,
+							Type:           "old",
+						},
+						{
+							TargetGroupArn: "newTarget",
+							Weight:         50,
+							Type:           "new",
 						},
 					},
 				},

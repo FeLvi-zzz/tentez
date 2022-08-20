@@ -85,7 +85,7 @@ func (r AwsListenerRule) getName() string {
 	return r.Name
 }
 
-func (rs AwsListenerRules) fetchData(cfg Config) (interface{}, error) {
+func (rs AwsListenerRules) fetchData(cfg Config) (TargetsData, error) {
 	if len(rs) == 0 {
 		return nil, nil
 	}
@@ -112,11 +112,7 @@ func (rs AwsListenerRules) fetchData(cfg Config) (interface{}, error) {
 		return nil, err
 	}
 
-	res := struct {
-		AwsListenerRules []AwsListenerRuleData `yaml:"aws_listener_rules"`
-	}{
-		AwsListenerRules: []AwsListenerRuleData{},
-	}
+	res := []AwsListenerRuleData{}
 
 	for _, ruleData := range rulesData.Rules {
 		for _, action := range ruleData.Actions {
@@ -130,7 +126,7 @@ func (rs AwsListenerRules) fetchData(cfg Config) (interface{}, error) {
 				})
 			}
 
-			res.AwsListenerRules = append(res.AwsListenerRules, AwsListenerRuleData{
+			res = append(res, AwsListenerRuleData{
 				Name:            ruleMap[*ruleData.RuleArn].Name,
 				ListenerRuleArn: *ruleData.RuleArn,
 				Weights:         targetGroupTuples,

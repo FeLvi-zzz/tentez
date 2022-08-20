@@ -7,7 +7,7 @@ import (
 type Tentez interface {
 	Plan() error
 	Apply(isForce bool) error
-	Get() error
+	Get() (map[TargetType]TargetsData, error)
 	Rollback() error
 }
 
@@ -86,14 +86,20 @@ func (t tentez) Plan() error {
 	return nil
 }
 
-func (t tentez) Get() (err error) {
-	for _, targetResouces := range t.Targets {
-		if err = outputData(targetResouces, t.config); err != nil {
-			return err
+func (t tentez) Get() (targetsMap map[TargetType]TargetsData, err error) {
+	mapData := map[TargetType]TargetsData{}
+	for targetType, targetResources := range t.Targets {
+		data, err := targetResources.fetchData(t.config)
+		if err != nil {
+			return nil, err
 		}
+		if data == nil {
+			continue
+		}
+		mapData[targetType] = data
 	}
 
-	return
+	return mapData, nil
 }
 
 func (t tentez) Rollback() (err error) {
