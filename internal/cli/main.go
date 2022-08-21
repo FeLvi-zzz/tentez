@@ -65,7 +65,7 @@ func Run() error {
 		}
 		return t.Apply(false)
 	case "rollback":
-		return t.Rollback()
+		return t.Rollback(true)
 	case "get":
 		dataMap, err := t.Get()
 		if err != nil {
