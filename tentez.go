@@ -2,13 +2,14 @@ package tentez
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Tentez interface {
 	Plan() error
 	Apply(isForce bool) error
-	Get() error
-	Rollback() error
+	Get() (map[TargetType]TargetsData, error)
+	Rollback(hasPause bool) error
 }
 
 type tentez struct {
@@ -58,57 +59,70 @@ func (t tentez) Apply(isForce bool) (err error) {
 }
 
 func (t tentez) Plan() error {
-	fmt.Fprintln(t.config.io.out, "Plan:")
+	var output strings.Builder
+
+	fmt.Fprintln(&output, "Plan:")
 	targetNames := getTargetNames(t.Targets)
 
 	for i, step := range t.Steps {
-		fmt.Fprintf(t.config.io.out, "%d. ", i+1)
+		fmt.Fprintf(&output, "%d. ", i+1)
 
 		switch step.Type {
 		case StepTypePause:
-			fmt.Fprintln(t.config.io.out, "pause")
+			fmt.Fprintln(&output, "pause")
 
 		case StepTypeSwitch:
 			weight := step.Weight
-			fmt.Fprintf(t.config.io.out, "switch old:new = %d:%d\n", weight.Old, weight.New)
+			fmt.Fprintf(&output, "switch old:new = %d:%d\n", weight.Old, weight.New)
 			for _, name := range targetNames {
-				fmt.Fprintf(t.config.io.out, "  - %s\n", name)
+				fmt.Fprintf(&output, "  - %s\n", name)
 			}
 
 		case StepTypeSleep:
-			fmt.Fprintf(t.config.io.out, "sleep %ds\n", step.SleepSeconds)
+			fmt.Fprintf(&output, "sleep %ds\n", step.SleepSeconds)
 
 		default:
 			return fmt.Errorf(`unknown step type "%s"`, step.Type)
 		}
 	}
 
+	fmt.Fprintf(t.config.io.out, output.String())
+
 	return nil
 }
 
-func (t tentez) Get() (err error) {
-	for _, targetResouces := range t.Targets {
-		if err = outputData(targetResouces, t.config); err != nil {
-			return err
+func (t tentez) Get() (targetsMap map[TargetType]TargetsData, err error) {
+	mapData := map[TargetType]TargetsData{}
+	for targetType, targetResources := range t.Targets {
+		data, err := targetResources.fetchData(t.config)
+		if err != nil {
+			return nil, err
 		}
+		if data == nil {
+			continue
+		}
+		mapData[targetType] = data
 	}
 
-	return
+	return mapData, nil
 }
 
-func (t tentez) Rollback() (err error) {
-	t.Steps = []Step{
-		{
+func (t tentez) Rollback(hasPause bool) (err error) {
+	t.Steps = []Step{}
+
+	if hasPause {
+		t.Steps = append(t.Steps, Step{
 			Type: StepTypePause,
-		},
-		{
-			Type: StepTypeSwitch,
-			Weight: Weight{
-				Old: 100,
-				New: 0,
-			},
-		},
+		})
 	}
+
+	t.Steps = append(t.Steps, Step{
+		Type: StepTypeSwitch,
+		Weight: Weight{
+			Old: 100,
+			New: 0,
+		},
+	})
 
 	if err = t.Plan(); err != nil {
 		return err

@@ -43,7 +43,7 @@ func (t targetsMock) targetsSlice() []Target {
 	return res
 }
 
-func (t targetsMock) fetchData(cfg Config) (interface{}, error) {
+func (t targetsMock) fetchData(cfg Config) (TargetsData, error) {
 	return []Target{}, nil
 }
 

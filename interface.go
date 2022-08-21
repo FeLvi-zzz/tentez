@@ -6,5 +6,6 @@ type Target interface {
 }
 type Targets interface {
 	targetsSlice() []Target
-	fetchData(cfg Config) (interface{}, error)
+	fetchData(cfg Config) (TargetsData, error)
 }
+type TargetsData interface{}

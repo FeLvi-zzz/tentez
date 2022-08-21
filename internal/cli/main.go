@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/FeLvi-zzz/tentez"
+	"gopkg.in/yaml.v2"
 )
 
 func flagParse() (cmd string, filepath string) {
@@ -64,9 +65,19 @@ func Run() error {
 		}
 		return t.Apply(false)
 	case "rollback":
-		return t.Rollback()
+		return t.Rollback(true)
 	case "get":
-		return t.Get()
+		dataMap, err := t.Get()
+		if err != nil {
+			return err
+		}
+		output, err := yaml.Marshal(&dataMap)
+		if err != nil {
+			return err
+		}
+		fmt.Printf(string(output))
+
+		return nil
 	case "version":
 		fmt.Printf("tentez version: %s (rev: %s)\n", tentez.Version, tentez.Revision)
 		return nil
