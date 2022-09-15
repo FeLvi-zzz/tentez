@@ -149,6 +149,6 @@ tentez version: x.x.x (rev: xxxxxxx)
     - forward target group. for except default LB listner rule.
 
 ## Why is named "Tentez"?
-A `tentetsuki` is `railroad switch` in Japanese. It is a mechanical device used to guide trains from one track to another. This tool switches traffic, like a "tentesuki".
+A `tentetsuki` is `railroad switch` in Japanese. It is a mechanical device used to guide trains from one track to another. This tool switches traffic, like a "tentetsuki".
 
 "Tentez" pronounces "ten-tets".
