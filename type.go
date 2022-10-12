@@ -9,6 +9,10 @@ const (
 	TargetTypeAwsListenerRule TargetType = "aws_listener_rules"
 )
 
+const (
+	maxDescribeTargetGroupsItems = 20
+)
+
 type Weight struct {
 	Old int32
 	New int32

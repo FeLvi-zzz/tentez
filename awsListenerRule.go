@@ -99,10 +99,12 @@ func (rs AwsListenerRules) fetchData(cfg Config) (TargetsData, error) {
 		ruleMap[rule.Target] = rule
 	}
 
-	if _, err := cfg.client.elbv2.DescribeTargetGroups(context.TODO(), &elbv2.DescribeTargetGroupsInput{
-		TargetGroupArns: tgArns,
-	}); err != nil {
-		fmt.Fprintln(cfg.io.err, err.Error())
+	for _, tgArnsBatch := range chunk(tgArns, maxDescribeTargetGroupsItems) {
+		if _, err := cfg.client.elbv2.DescribeTargetGroups(context.TODO(), &elbv2.DescribeTargetGroupsInput{
+			TargetGroupArns: tgArnsBatch,
+		}); err != nil {
+			fmt.Fprintln(cfg.io.err, err.Error())
+		}
 	}
 
 	rulesData, err := cfg.client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
