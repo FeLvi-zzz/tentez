@@ -107,30 +107,34 @@ func (rs AwsListenerRules) fetchData(cfg Config) (TargetsData, error) {
 		}
 	}
 
-	rulesData, err := cfg.client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
-		RuleArns: ruleArns,
-	})
-	if err != nil {
-		return nil, err
+	rules := []elbv2Types.Rule{}
+	for _, ruleArnsBatch := range chunk(ruleArns, maxDescribeRulesItems) {
+		rulesOutput, err := cfg.client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
+			RuleArns: ruleArnsBatch,
+		})
+		if err != nil {
+			return nil, err
+		}
+		rules = append(rules, rulesOutput.Rules...)
 	}
 
 	res := []AwsListenerRuleData{}
 
-	for _, ruleData := range rulesData.Rules {
-		for _, action := range ruleData.Actions {
+	for _, rule := range rules {
+		for _, action := range rule.Actions {
 			targetGroupTuples := []AwsTargetGroupTuple{}
 
 			for _, tgTuple := range action.ForwardConfig.TargetGroups {
 				targetGroupTuples = append(targetGroupTuples, AwsTargetGroupTuple{
-					Type:           ruleMap[*ruleData.RuleArn].Switch.getType(*tgTuple.TargetGroupArn),
+					Type:           ruleMap[*rule.RuleArn].Switch.getType(*tgTuple.TargetGroupArn),
 					TargetGroupArn: aws.ToString(tgTuple.TargetGroupArn),
 					Weight:         aws.ToInt32(tgTuple.Weight),
 				})
 			}
 
 			res = append(res, AwsListenerRuleData{
-				Name:            ruleMap[*ruleData.RuleArn].Name,
-				ListenerRuleArn: *ruleData.RuleArn,
+				Name:            ruleMap[*rule.RuleArn].Name,
+				ListenerRuleArn: *rule.RuleArn,
 				Weights:         targetGroupTuples,
 			})
 		}

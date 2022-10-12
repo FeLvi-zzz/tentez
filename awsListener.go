@@ -107,29 +107,33 @@ func (ls AwsListeners) fetchData(cfg Config) (TargetsData, error) {
 		}
 	}
 
-	listenersData, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
-		ListenerArns: listenerArns,
-	})
-	if err != nil {
-		return nil, err
+	listeners := []elbv2Types.Listener{}
+	for _, listenerArnsBatch := range chunk(listenerArns, maxDescribeListenersItems) {
+		listenersOutput, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
+			ListenerArns: listenerArnsBatch,
+		})
+		if err != nil {
+			return nil, err
+		}
+		listeners = append(listeners, listenersOutput.Listeners...)
 	}
 
 	res := []AwsListenerData{}
 
-	for _, listenerData := range listenersData.Listeners {
-		for _, action := range listenerData.DefaultActions {
+	for _, listener := range listeners {
+		for _, action := range listener.DefaultActions {
 			targetGroupTuples := []AwsTargetGroupTuple{}
 			for _, tgTuple := range action.ForwardConfig.TargetGroups {
 				targetGroupTuples = append(targetGroupTuples, AwsTargetGroupTuple{
-					Type:           listenerMap[*listenerData.ListenerArn].Switch.getType(*tgTuple.TargetGroupArn),
+					Type:           listenerMap[*listener.ListenerArn].Switch.getType(*tgTuple.TargetGroupArn),
 					TargetGroupArn: aws.ToString(tgTuple.TargetGroupArn),
 					Weight:         aws.ToInt32(tgTuple.Weight),
 				})
 			}
 
 			res = append(res, AwsListenerData{
-				Name:       listenerMap[*listenerData.ListenerArn].Name,
-				ListnerArn: *listenerData.ListenerArn,
+				Name:       listenerMap[*listener.ListenerArn].Name,
+				ListnerArn: *listener.ListenerArn,
 				Weights:    targetGroupTuples,
 			})
 		}
