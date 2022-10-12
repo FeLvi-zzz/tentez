@@ -99,10 +99,12 @@ func (ls AwsListeners) fetchData(cfg Config) (TargetsData, error) {
 		listenerMap[listener.Target] = listener
 	}
 
-	if _, err := cfg.client.elbv2.DescribeTargetGroups(context.TODO(), &elbv2.DescribeTargetGroupsInput{
-		TargetGroupArns: tgArns,
-	}); err != nil {
-		fmt.Fprintln(cfg.io.err, err.Error())
+	for _, tgArnsBatch := range chunk(tgArns, maxDescribeTargetGroupsItems) {
+		if _, err := cfg.client.elbv2.DescribeTargetGroups(context.TODO(), &elbv2.DescribeTargetGroupsInput{
+			TargetGroupArns: tgArnsBatch,
+		}); err != nil {
+			fmt.Fprintln(cfg.io.err, err.Error())
+		}
 	}
 
 	listenersData, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
