@@ -11,6 +11,8 @@ const (
 
 const (
 	maxDescribeTargetGroupsItems = 20
+	maxDescribeRulesItems        = 20
+	maxDescribeListenersItems    = 20
 )
 
 type Weight struct {
