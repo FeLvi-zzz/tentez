@@ -59,23 +59,7 @@ func (r AwsListenerRule) execSwitch(targetWeight Weight, isForce bool, cfg Confi
 
 	_, err := cfg.client.elbv2.ModifyRule(context.TODO(), &elbv2.ModifyRuleInput{
 		RuleArn: aws.String(r.Target),
-		Actions: []elbv2Types.Action{
-			{
-				Type: "forward",
-				ForwardConfig: &elbv2Types.ForwardActionConfig{
-					TargetGroups: []elbv2Types.TargetGroupTuple{
-						{
-							TargetGroupArn: aws.String(r.Switch.Old),
-							Weight:         aws.Int32(targetWeight.Old),
-						},
-						{
-							TargetGroupArn: aws.String(r.Switch.New),
-							Weight:         aws.Int32(targetWeight.New),
-						},
-					},
-				},
-			},
-		},
+		Actions: compactActions(r.Switch, targetWeight),
 	})
 
 	return err

@@ -1,6 +1,11 @@
 package tentez
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elbv2Types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+)
 
 type TargetType string
 
@@ -41,6 +46,43 @@ func (s Switch) getType(t string) string {
 		return "new"
 	default:
 		return "unknown"
+	}
+}
+
+func compactActions(targetSwitch Switch, targetWeight Weight) []elbv2Types.Action {
+	switch {
+	case targetWeight.Old == 0:
+		return []elbv2Types.Action{
+			{
+				Type:           elbv2Types.ActionTypeEnumForward,
+				TargetGroupArn: aws.String(targetSwitch.New),
+			},
+		}
+	case targetWeight.New == 0:
+		return []elbv2Types.Action{
+			{
+				Type:           elbv2Types.ActionTypeEnumForward,
+				TargetGroupArn: aws.String(targetSwitch.Old),
+			},
+		}
+	default:
+		return []elbv2Types.Action{
+			{
+				Type: elbv2Types.ActionTypeEnumForward,
+				ForwardConfig: &elbv2Types.ForwardActionConfig{
+					TargetGroups: []elbv2Types.TargetGroupTuple{
+						{
+							TargetGroupArn: aws.String(targetSwitch.Old),
+							Weight:         aws.Int32(targetWeight.Old),
+						},
+						{
+							TargetGroupArn: aws.String(targetSwitch.New),
+							Weight:         aws.Int32(targetWeight.New),
+						},
+					},
+				},
+			},
+		}
 	}
 }
 
