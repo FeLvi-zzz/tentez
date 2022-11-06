@@ -28,26 +28,30 @@ func (r AwsListenerRule) execSwitch(targetWeight Weight, isForce bool, cfg Confi
 	// avoid rate limit
 	time.Sleep(1 * time.Second)
 
-	if !isForce {
-		ruleData, err := cfg.client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
-			RuleArns: []string{r.Target},
-		})
-		if err != nil {
-			return err
+	ruleData, err := cfg.client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
+		RuleArns: []string{r.Target},
+	})
+	if err != nil {
+		return err
+	}
+
+	tgWeight := Weight{}
+	for _, action := range ruleData.Rules[0].Actions {
+		if action.Type != elbv2Types.ActionTypeEnumForward {
+			return fmt.Errorf("invalid action type: %s", action.Type)
 		}
 
-		tgWeight := Weight{}
-		for _, action := range ruleData.Rules[0].Actions {
-			for _, tgTuple := range action.ForwardConfig.TargetGroups {
-				switch *tgTuple.TargetGroupArn {
-				case r.Switch.Old:
-					tgWeight.Old = *tgTuple.Weight
-				case r.Switch.New:
-					tgWeight.New = *tgTuple.Weight
-				}
+		for _, tgTuple := range action.ForwardConfig.TargetGroups {
+			switch *tgTuple.TargetGroupArn {
+			case r.Switch.Old:
+				tgWeight.Old = *tgTuple.Weight
+			case r.Switch.New:
+				tgWeight.New = *tgTuple.Weight
 			}
 		}
+	}
 
+	if !isForce {
 		if tgWeight.CalcOldRatio() < targetWeight.CalcOldRatio() {
 			return SkipSwitchError{"the old weight target is larger than current one."}
 		}
@@ -57,7 +61,7 @@ func (r AwsListenerRule) execSwitch(targetWeight Weight, isForce bool, cfg Confi
 		}
 	}
 
-	_, err := cfg.client.elbv2.ModifyRule(context.TODO(), &elbv2.ModifyRuleInput{
+	_, err = cfg.client.elbv2.ModifyRule(context.TODO(), &elbv2.ModifyRuleInput{
 		RuleArn: aws.String(r.Target),
 		Actions: compactActions(r.Switch, targetWeight),
 	})
@@ -108,17 +112,19 @@ func (rs AwsListenerRules) fetchData(cfg Config) (TargetsData, error) {
 		for _, action := range rule.Actions {
 			targetGroupTuples := []AwsTargetGroupTuple{}
 
-			for _, tgTuple := range action.ForwardConfig.TargetGroups {
-				targetGroupTuples = append(targetGroupTuples, AwsTargetGroupTuple{
-					Type:           ruleMap[*rule.RuleArn].Switch.getType(*tgTuple.TargetGroupArn),
-					TargetGroupArn: aws.ToString(tgTuple.TargetGroupArn),
-					Weight:         aws.ToInt32(tgTuple.Weight),
-				})
+			if action.Type == elbv2Types.ActionTypeEnumForward {
+				for _, tgTuple := range action.ForwardConfig.TargetGroups {
+					targetGroupTuples = append(targetGroupTuples, AwsTargetGroupTuple{
+						Type:           ruleMap[aws.ToString(rule.RuleArn)].Switch.getType(aws.ToString(tgTuple.TargetGroupArn)),
+						TargetGroupArn: aws.ToString(tgTuple.TargetGroupArn),
+						Weight:         aws.ToInt32(tgTuple.Weight),
+					})
+				}
 			}
 
 			res = append(res, AwsListenerRuleData{
-				Name:            ruleMap[*rule.RuleArn].Name,
-				ListenerRuleArn: *rule.RuleArn,
+				Name:            ruleMap[aws.ToString(rule.RuleArn)].Name,
+				ListenerRuleArn: aws.ToString(rule.RuleArn),
 				Weights:         targetGroupTuples,
 			})
 		}

@@ -57,6 +57,7 @@ type elbv2Mock struct {
 func NewDummyActions() []elbv2Types.Action {
 	return []elbv2Types.Action{
 		{
+			Type: elbv2Types.ActionTypeEnumForward,
 			ForwardConfig: &elbv2Types.ForwardActionConfig{
 				TargetGroups: []elbv2Types.TargetGroupTuple{
 					{
