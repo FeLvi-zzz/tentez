@@ -35,8 +35,13 @@ func (r AwsListenerRule) execSwitch(targetWeight Weight, isForce bool, cfg Confi
 		return err
 	}
 
+	rule := ruleData.Rules[0]
+	if rule.IsDefault {
+		return fmt.Errorf("this is a default listener rule. Use `aws_listeners`")
+	}
+
 	tgWeight := Weight{}
-	for _, action := range ruleData.Rules[0].Actions {
+	for _, action := range rule.Actions {
 		if action.Type != elbv2Types.ActionTypeEnumForward {
 			return fmt.Errorf("invalid action type: %s", action.Type)
 		}
@@ -109,6 +114,10 @@ func (rs AwsListenerRules) fetchData(cfg Config) (TargetsData, error) {
 	res := []AwsListenerRuleData{}
 
 	for _, rule := range rules {
+		if rule.IsDefault {
+			return nil, fmt.Errorf("%s is a default listener rule. Use `aws_listeners`", aws.ToString(rule.RuleArn))
+		}
+
 		for _, action := range rule.Actions {
 			targetGroupTuples := []AwsTargetGroupTuple{}
 
