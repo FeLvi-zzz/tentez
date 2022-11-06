@@ -86,7 +86,7 @@ func (t tentez) Plan() error {
 		}
 	}
 
-	fmt.Fprintf(t.config.io.out, output.String())
+	fmt.Fprint(t.config.io.out, output.String())
 
 	return nil
 }

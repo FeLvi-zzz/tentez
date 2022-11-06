@@ -28,26 +28,30 @@ func (l AwsListener) execSwitch(targetWeight Weight, isForce bool, cfg Config) e
 	// avoid rate limit
 	time.Sleep(1 * time.Second)
 
-	if !isForce {
-		listenerData, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
-			ListenerArns: []string{l.Target},
-		})
-		if err != nil {
-			return err
+	listenerData, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
+		ListenerArns: []string{l.Target},
+	})
+	if err != nil {
+		return err
+	}
+
+	tgWeight := Weight{}
+	for _, action := range listenerData.Listeners[0].DefaultActions {
+		if action.Type != elbv2Types.ActionTypeEnumForward {
+			return fmt.Errorf("invalid action type: %s", action.Type)
 		}
 
-		tgWeight := Weight{}
-		for _, action := range listenerData.Listeners[0].DefaultActions {
-			for _, tgTuple := range action.ForwardConfig.TargetGroups {
-				switch *tgTuple.TargetGroupArn {
-				case l.Switch.Old:
-					tgWeight.Old = *tgTuple.Weight
-				case l.Switch.New:
-					tgWeight.New = *tgTuple.Weight
-				}
+		for _, tgTuple := range action.ForwardConfig.TargetGroups {
+			switch *tgTuple.TargetGroupArn {
+			case l.Switch.Old:
+				tgWeight.Old = *tgTuple.Weight
+			case l.Switch.New:
+				tgWeight.New = *tgTuple.Weight
 			}
 		}
+	}
 
+	if !isForce {
 		if tgWeight.CalcOldRatio() < targetWeight.CalcOldRatio() {
 			return SkipSwitchError{"the old weight target is larger than current one."}
 		}
@@ -57,7 +61,7 @@ func (l AwsListener) execSwitch(targetWeight Weight, isForce bool, cfg Config) e
 		}
 	}
 
-	_, err := cfg.client.elbv2.ModifyListener(context.TODO(), &elbv2.ModifyListenerInput{
+	_, err = cfg.client.elbv2.ModifyListener(context.TODO(), &elbv2.ModifyListenerInput{
 		ListenerArn:    aws.String(l.Target),
 		DefaultActions: compactActions(l.Switch, targetWeight),
 	})
@@ -107,17 +111,20 @@ func (ls AwsListeners) fetchData(cfg Config) (TargetsData, error) {
 	for _, listener := range listeners {
 		for _, action := range listener.DefaultActions {
 			targetGroupTuples := []AwsTargetGroupTuple{}
-			for _, tgTuple := range action.ForwardConfig.TargetGroups {
-				targetGroupTuples = append(targetGroupTuples, AwsTargetGroupTuple{
-					Type:           listenerMap[*listener.ListenerArn].Switch.getType(*tgTuple.TargetGroupArn),
-					TargetGroupArn: aws.ToString(tgTuple.TargetGroupArn),
-					Weight:         aws.ToInt32(tgTuple.Weight),
-				})
+
+			if action.Type == elbv2Types.ActionTypeEnumForward {
+				for _, tgTuple := range action.ForwardConfig.TargetGroups {
+					targetGroupTuples = append(targetGroupTuples, AwsTargetGroupTuple{
+						Type:           listenerMap[aws.ToString(listener.ListenerArn)].Switch.getType(aws.ToString(tgTuple.TargetGroupArn)),
+						TargetGroupArn: aws.ToString(tgTuple.TargetGroupArn),
+						Weight:         aws.ToInt32(tgTuple.Weight),
+					})
+				}
 			}
 
 			res = append(res, AwsListenerData{
-				Name:       listenerMap[*listener.ListenerArn].Name,
-				ListnerArn: *listener.ListenerArn,
+				Name:       listenerMap[aws.ToString(listener.ListenerArn)].Name,
+				ListnerArn: aws.ToString(listener.ListenerArn),
 				Weights:    targetGroupTuples,
 			})
 		}

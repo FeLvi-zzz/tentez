@@ -2,7 +2,7 @@ package tentez
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v2"
 )
@@ -12,7 +12,7 @@ func NewFromYaml(filepath string) (t Tentez, err error) {
 		return nil, fmt.Errorf("filepath(-f option) must be set")
 	}
 
-	data, err := ioutil.ReadFile(filepath)
+	data, err := os.ReadFile(filepath)
 	if err != nil {
 		return
 	}
