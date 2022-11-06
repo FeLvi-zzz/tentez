@@ -75,7 +75,7 @@ func Run() error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf(string(output))
+		fmt.Print(string(output))
 
 		return nil
 	case "version":

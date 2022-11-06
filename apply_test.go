@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
-	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	elbv2Types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 )
 
 type targetsMock []targetMock
@@ -54,11 +54,11 @@ type elbv2Mock struct {
 	DescribeListenersError error
 }
 
-func NewDummyActions() []types.Action {
-	return []types.Action{
+func NewDummyActions() []elbv2Types.Action {
+	return []elbv2Types.Action{
 		{
-			ForwardConfig: &types.ForwardActionConfig{
-				TargetGroups: []types.TargetGroupTuple{
+			ForwardConfig: &elbv2Types.ForwardActionConfig{
+				TargetGroups: []elbv2Types.TargetGroupTuple{
 					{
 						TargetGroupArn: aws.String("oldTarget"),
 						Weight:         aws.Int32(50),
@@ -81,7 +81,7 @@ func (m elbv2Mock) ModifyRule(ctx context.Context, params *elbv2.ModifyRuleInput
 }
 func (m elbv2Mock) DescribeRules(ctx context.Context, params *elbv2.DescribeRulesInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeRulesOutput, error) {
 	return &elbv2.DescribeRulesOutput{
-		Rules: []types.Rule{
+		Rules: []elbv2Types.Rule{
 			{
 				RuleArn: &params.RuleArns[0],
 				Actions: NewDummyActions(),
@@ -91,7 +91,7 @@ func (m elbv2Mock) DescribeRules(ctx context.Context, params *elbv2.DescribeRule
 }
 func (m elbv2Mock) DescribeListeners(ctx context.Context, params *elbv2.DescribeListenersInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeListenersOutput, error) {
 	return &elbv2.DescribeListenersOutput{
-		Listeners: []types.Listener{
+		Listeners: []elbv2Types.Listener{
 			{
 				ListenerArn:    &params.ListenerArns[0],
 				DefaultActions: NewDummyActions(),

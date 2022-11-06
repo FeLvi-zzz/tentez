@@ -32,13 +32,11 @@ func Example() {
 	if err != nil {
 		return
 	}
-	fmt.Printf(string(output))
+	fmt.Print(string(output))
 
 	data, ok := targetsData[tentez.TargetTypeAwsListener].([]tentez.AwsListenerData)
 	if ok && len(data) > 0 {
 		name := data[0].Name
 		fmt.Println(name)
 	}
-
-	return
 }
