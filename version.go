@@ -1,5 +1,5 @@
 package tentez
 
-const Version = "0.6.1"
+const Version = "0.7.0"
 
 var Revision = "Devel"
