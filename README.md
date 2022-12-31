@@ -141,6 +141,25 @@ $ tentez version
 tentez version: x.x.x (rev: xxxxxxx)
 ```
 
+```console
+# generate config from terraform plan json
+$ terraform plan -out tfplan && terraform show -json tfplan > tfplan.json
+$ tentez generate-config tfplanjson -f ./tfplan.json -o tentez.yaml
+```
+
+For instance, you can generate a config from the below terraform diff.
+```diff
+ resource "aws_lb_listener" "example" {
+   ...
+ 
+   default_action {
+     type             = "forward"
+-    target_group_arn = aws_lb_target_group.old.arn
++    target_group_arn = aws_lb_target_group.new.arn
+   }
+ }
+```
+
 # available resources
 - AWS
   - Listener
