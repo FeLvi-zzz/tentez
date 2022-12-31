@@ -9,7 +9,7 @@ import (
 
 func NewFromYaml(filepath string) (t Tentez, err error) {
 	if filepath == "" {
-		return nil, fmt.Errorf("filepath(-f option) must be set")
+		return nil, fmt.Errorf("filepath must be specified")
 	}
 
 	data, err := os.ReadFile(filepath)
