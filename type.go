@@ -88,8 +88,8 @@ func compactActions(targetSwitch Switch, targetWeight Weight) []elbv2Types.Actio
 
 type Step struct {
 	Type         StepType `yaml:"type"`
-	Weight       Weight   `yaml:"weight"`
-	SleepSeconds int      `yaml:"sleepSeconds"`
+	Weight       Weight   `yaml:"weight,omitempty"`
+	SleepSeconds int      `yaml:"sleepSeconds,omitempty"`
 }
 
 type StepType string
