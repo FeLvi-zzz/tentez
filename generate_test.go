@@ -219,71 +219,77 @@ func TestChangeActions_IsUpdate(t *testing.T) {
 
 func TestGenerateConfigFromTerraformPlanJson(t *testing.T) {
 	cs := []struct {
-		input    TerraformPlanJson
+		input    []TerraformPlanJson
 		expected YamlStruct
 		isError  bool
 	}{
 		{
-			input: TerraformPlanJson{
-				ResourceChanges: []ResourceChange{
-					{
-						Address: "other_resource_address",
-						Type:    "aws_hoge",
-						Change: Change{
-							Actions: []ChangeAction{
-								ChangeActionUpdate,
+			input: []TerraformPlanJson{
+				{
+					ResourceChanges: []ResourceChange{
+						{
+							Address: "other_resource_address",
+							Type:    "aws_hoge",
+							Change: Change{
+								Actions: []ChangeAction{
+									ChangeActionUpdate,
+								},
+								After: json.RawMessage(
+									([]byte)(`{}`),
+								),
+								Before: json.RawMessage(
+									([]byte)(`{}`),
+								),
 							},
-							After: json.RawMessage(
-								([]byte)(`{}`),
-							),
-							Before: json.RawMessage(
-								([]byte)(`{}`),
-							),
+						},
+						{
+							Address: "other_change_action_address",
+							Type:    "aws_lb_listener",
+							Change: Change{
+								Actions: []ChangeAction{
+									ChangeActionCreate,
+								},
+								After: json.RawMessage(
+									([]byte)(`{}`),
+								),
+								Before: json.RawMessage(
+									([]byte)(`{}`),
+								),
+							},
 						},
 					},
-					{
-						Address: "other_change_action_address",
-						Type:    "aws_lb_listener",
-						Change: Change{
-							Actions: []ChangeAction{
-								ChangeActionCreate,
+				},
+				{
+					ResourceChanges: []ResourceChange{
+						{
+							Address: "listener_address",
+							Type:    "aws_lb_listener",
+							Change: Change{
+								Actions: []ChangeAction{
+									ChangeActionUpdate,
+								},
+								After: json.RawMessage(
+									([]byte)(`{"arn":"listener_arn","default_action":[{"target_group_arn":"new_tg_arn"}]}`),
+								),
+								Before: json.RawMessage(
+									([]byte)(`{"arn":"listener_arn","default_action":[{"target_group_arn":"old_tg_arn"}]}`),
+								),
 							},
-							After: json.RawMessage(
-								([]byte)(`{}`),
-							),
-							Before: json.RawMessage(
-								([]byte)(`{}`),
-							),
 						},
-					},
-					{
-						Address: "listener_address",
-						Type:    "aws_lb_listener",
-						Change: Change{
-							Actions: []ChangeAction{
-								ChangeActionUpdate,
+						{
+							Address: "rule_address",
+							Type:    "aws_lb_listener_rule",
+							Change: Change{
+								Actions: []ChangeAction{
+									ChangeActionUpdate,
+								},
+								After: json.RawMessage(
+									([]byte)(`{"arn":"rule_arn","action":[{"target_group_arn":"new_tg_arn"}]}`),
+								),
+								Before: json.RawMessage(
+									([]byte)(`{"arn":"rule_arn","action":[{"target_group_arn":"old_tg_arn"}]}`),
+								),
 							},
-							After: json.RawMessage(
-								([]byte)(`{"arn":"listener_arn","default_action":[{"target_group_arn":"new_tg_arn"}]}`),
-							),
-							Before: json.RawMessage(
-								([]byte)(`{"arn":"listener_arn","default_action":[{"target_group_arn":"old_tg_arn"}]}`),
-							),
-						},
-					},
-					{
-						Address: "rule_address",
-						Type:    "aws_lb_listener_rule",
-						Change: Change{
-							Actions: []ChangeAction{
-								ChangeActionUpdate,
-							},
-							After: json.RawMessage(
-								([]byte)(`{"arn":"rule_arn","action":[{"target_group_arn":"new_tg_arn"}]}`),
-							),
-							Before: json.RawMessage(
-								([]byte)(`{"arn":"rule_arn","action":[{"target_group_arn":"old_tg_arn"}]}`),
-							),
 						},
 					},
 				},
@@ -315,7 +321,7 @@ func TestGenerateConfigFromTerraformPlanJson(t *testing.T) {
 	}
 
 	for _, c := range cs {
-		y, err := GenerateConfigFromTerraformPlanJson(c.input)
+		y, err := GenerateConfigFromTerraformPlanJsons(c.input)
 		if c.isError != (err != nil) {
 			t.Errorf("expected isError is %t, got %v", c.isError, err)
 		}
