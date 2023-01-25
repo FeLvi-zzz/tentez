@@ -161,21 +161,28 @@ func (c ChangeActions) IsUpdate() bool {
 	return len(c) == 1 && c[0] == ChangeActionUpdate
 }
 
-func GenerateConfigFromTerraformPlanJson(json TerraformPlanJson) (YamlStruct, error) {
-	awsListeners, err := getAwsListenersFromTerraformJson(json)
-	if err != nil {
-		return YamlStruct{}, err
-	}
+func GenerateConfigFromTerraformPlanJsons(jsons []TerraformPlanJson) (YamlStruct, error) {
+	allAwsListeners := []AwsListener{}
+	allAwsListenerRules := []AwsListenerRule{}
 
-	awsListenerRules, err := getAwsListenerRulesFromTerraformJson(json)
-	if err != nil {
-		return YamlStruct{}, err
+	for _, json := range jsons {
+		awsListeners, err := getAwsListenersFromTerraformJson(json)
+		if err != nil {
+			return YamlStruct{}, err
+		}
+		allAwsListeners = append(allAwsListeners, awsListeners...)
+
+		awsListenerRules, err := getAwsListenerRulesFromTerraformJson(json)
+		if err != nil {
+			return YamlStruct{}, err
+		}
+		allAwsListenerRules = append(allAwsListenerRules, awsListenerRules...)
 	}
 
 	return YamlStruct{
 		Steps:            defaultSteps,
-		AwsListeners:     awsListeners,
-		AwsListenerRules: awsListenerRules,
+		AwsListeners:     allAwsListeners,
+		AwsListenerRules: allAwsListenerRules,
 	}, nil
 }
 

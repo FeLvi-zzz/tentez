@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var filepaths = []string{}
 var output = ""
 
 var generateConfigCmd = &cobra.Command{
@@ -25,17 +26,22 @@ var generateConfigTerraformPlanJsonCmd = &cobra.Command{
 $ terraform plan -out tfplan && terraform show -json tfplan > tfplan.json
 $ tentez generate-config tfplanjson -f ./tfplan.json -o tentez.yaml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		data, err := os.ReadFile(filepath)
-		if err != nil {
-			return fmt.Errorf("cannot read file: %w", err)
+		tfplanjsons := []tentez.TerraformPlanJson{}
+		for _, filepath := range filepaths {
+			data, err := os.ReadFile(filepath)
+			if err != nil {
+				return fmt.Errorf("cannot read file: %w", err)
+			}
+
+			tfplanjson := tentez.TerraformPlanJson{}
+			if err := json.Unmarshal(data, &tfplanjson); err != nil {
+				return fmt.Errorf("cannot parse json: %w", err)
+			}
+
+			tfplanjsons = append(tfplanjsons, tfplanjson)
 		}
 
-		tfplanjson := tentez.TerraformPlanJson{}
-		if err := json.Unmarshal(data, &tfplanjson); err != nil {
-			return fmt.Errorf("cannot parse json: %w", err)
-		}
-
-		configYaml, err := tentez.GenerateConfigFromTerraformPlanJson(tfplanjson)
+		configYaml, err := tentez.GenerateConfigFromTerraformPlanJsons(tfplanjsons)
 		if err != nil {
 			return fmt.Errorf("cannot generate config: %w", err)
 		}
@@ -63,7 +69,7 @@ $ tentez generate-config tfplanjson -f ./tfplan.json -o tentez.yaml`,
 }
 
 func init() {
-	generateConfigCmd.PersistentFlags().StringVarP(&filepath, "filepath", "f", "", "terraform plan json file")
+	generateConfigCmd.PersistentFlags().StringArrayVarP(&filepaths, "filepath", "f", []string{}, "terraform plan json file")
 	if err := generateConfigCmd.MarkPersistentFlagRequired("filepath"); err != nil {
 		panic(err)
 	}
