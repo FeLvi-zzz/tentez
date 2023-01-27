@@ -12,8 +12,8 @@ var planCmd = &cobra.Command{
 # show plan
 $ tentez -f ./examples/example.yaml plan`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		filepath := cmd.Flag("filepath").Value.String()
-		t, err := tentez.NewFromYaml(filepath)
+		filename := cmd.Flag("filename").Value.String()
+		t, err := tentez.NewFromYaml(filename)
 		if err != nil {
 			return err
 		}
@@ -23,8 +23,8 @@ $ tentez -f ./examples/example.yaml plan`,
 }
 
 func init() {
-	planCmd.Flags().StringVarP(&filepath, "filepath", "f", "", "config file for tentez")
-	if err := planCmd.MarkFlagRequired("filepath"); err != nil {
+	planCmd.Flags().StringVarP(&filename, "filename", "f", "", "config file for tentez")
+	if err := planCmd.MarkFlagRequired("filename"); err != nil {
 		panic(err)
 	}
 

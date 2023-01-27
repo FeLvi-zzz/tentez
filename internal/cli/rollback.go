@@ -12,8 +12,8 @@ var rollbackCmd = &cobra.Command{
 # rollback
 $ tentez -f ./examples/example.yaml rollback`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		filepath := cmd.Flag("filepath").Value.String()
-		t, err := tentez.NewFromYaml(filepath)
+		filename := cmd.Flag("filename").Value.String()
+		t, err := tentez.NewFromYaml(filename)
 		if err != nil {
 			return err
 		}
@@ -23,8 +23,8 @@ $ tentez -f ./examples/example.yaml rollback`,
 }
 
 func init() {
-	rollbackCmd.Flags().StringVarP(&filepath, "filepath", "f", "", "config file for tentez")
-	if err := rollbackCmd.MarkFlagRequired("filepath"); err != nil {
+	rollbackCmd.Flags().StringVarP(&filename, "filename", "f", "", "config file for tentez")
+	if err := rollbackCmd.MarkFlagRequired("filename"); err != nil {
 		panic(err)
 	}
 

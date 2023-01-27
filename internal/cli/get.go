@@ -15,8 +15,8 @@ var getCmd = &cobra.Command{
 # Show current state of targets
 $ tentez -f ./examples/example.yaml get`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		filepath := cmd.Flag("filepath").Value.String()
-		t, err := tentez.NewFromYaml(filepath)
+		filename := cmd.Flag("filename").Value.String()
+		t, err := tentez.NewFromYaml(filename)
 		if err != nil {
 			return err
 		}
@@ -36,8 +36,8 @@ $ tentez -f ./examples/example.yaml get`,
 }
 
 func init() {
-	getCmd.Flags().StringVarP(&filepath, "filepath", "f", "", "config file for tentez")
-	if err := getCmd.MarkFlagRequired("filepath"); err != nil {
+	getCmd.Flags().StringVarP(&filename, "filename", "f", "", "config file for tentez")
+	if err := getCmd.MarkFlagRequired("filename"); err != nil {
 		panic(err)
 	}
 

@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var filepaths = []string{}
+var filenames = []string{}
 var output = ""
 
 var generateConfigCmd = &cobra.Command{
@@ -27,8 +27,8 @@ $ terraform plan -out tfplan && terraform show -json tfplan > tfplan.json
 $ tentez generate-config tfplanjson -f ./tfplan.json -o tentez.yaml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		tfplanjsons := []tentez.TerraformPlanJson{}
-		for _, filepath := range filepaths {
-			data, err := os.ReadFile(filepath)
+		for _, filename := range filenames {
+			data, err := os.ReadFile(filename)
 			if err != nil {
 				return fmt.Errorf("cannot read file: %w", err)
 			}
@@ -69,8 +69,8 @@ $ tentez generate-config tfplanjson -f ./tfplan.json -o tentez.yaml`,
 }
 
 func init() {
-	generateConfigCmd.PersistentFlags().StringArrayVarP(&filepaths, "filepath", "f", []string{}, "terraform plan json file")
-	if err := generateConfigCmd.MarkPersistentFlagRequired("filepath"); err != nil {
+	generateConfigCmd.PersistentFlags().StringArrayVarP(&filenames, "filename", "f", []string{}, "terraform plan json file")
+	if err := generateConfigCmd.MarkPersistentFlagRequired("filename"); err != nil {
 		panic(err)
 	}
 
