@@ -7,12 +7,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func NewFromYaml(filepath string) (t Tentez, err error) {
-	if filepath == "" {
-		return nil, fmt.Errorf("filepath must be specified")
+func NewFromYaml(filename string) (t Tentez, err error) {
+	if filename == "" {
+		return nil, fmt.Errorf("filename must be specified")
 	}
 
-	data, err := os.ReadFile(filepath)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return
 	}

@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var filepath = ""
+var filename = ""
 
 var rootCmd = &cobra.Command{
 	Use:   "tentez",
