@@ -15,6 +15,7 @@ type elbv2Client interface {
 	DescribeRules(ctx context.Context, params *elbv2.DescribeRulesInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeRulesOutput, error)
 	elbv2.DescribeListenersAPIClient
 	elbv2.DescribeTargetGroupsAPIClient
+	elbv2.DescribeTargetHealthAPIClient
 }
 
 type Client struct {

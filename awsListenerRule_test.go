@@ -186,3 +186,45 @@ func TestAwsListenerRules_fetchData(t *testing.T) {
 		}
 	}
 }
+
+func TestAwsListenerRule_checkHealth(t *testing.T) {
+	cases := []struct {
+		isError         bool
+		awsListenerRule AwsListenerRule
+		weight          Weight
+		elbv2Mock       elbv2Mock
+	}{
+		{
+			isError: false,
+			awsListenerRule: AwsListenerRule{
+				Name:   "success",
+				Target: "validTarget",
+				Switch: Switch{
+					Old: "oldTarget",
+					New: "newTarget",
+				},
+			},
+			weight: Weight{
+				Old: 50,
+				New: 50,
+			},
+		},
+	}
+
+	for _, c := range cases {
+		err := c.awsListenerRule.checkHealth(c.weight, Config{
+			client: Client{
+				elbv2: c.elbv2Mock,
+			},
+			io: IOStreams{
+				in:  bytes.NewBufferString(""),
+				out: bytes.NewBufferString(""),
+				err: bytes.NewBufferString(""),
+			},
+		})
+
+		if c.isError != (err != nil) {
+			t.Errorf("%s: expect isError == %t, but got %v", c.awsListenerRule.Name, c.isError, err)
+		}
+	}
+}

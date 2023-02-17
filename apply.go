@@ -47,7 +47,7 @@ func sleep(sec int, cfg Config) {
 		for {
 			select {
 			case t := <-ticker.C:
-				fmt.Fprintf(cfg.io.out, "\rRemain: %ds ", int(finishAt.Sub(t).Seconds()))
+				fmt.Fprintf(cfg.io.out, "\rRemain: %ds\033[K", int(finishAt.Sub(t).Seconds()))
 
 			case <-tickerStop:
 				fmt.Fprintln(cfg.io.out, "\a")
@@ -86,6 +86,9 @@ func execSwitch(targets map[TargetType]Targets, weight Weight, isForce bool, cfg
 				fmt.Fprintln(cfg.io.out, err.Error())
 			} else {
 				fmt.Fprintln(cfg.io.out, "switched!")
+				if err := target.checkHealth(weight, cfg); err != nil {
+					return err
+				}
 			}
 		}
 	}

@@ -3,6 +3,7 @@ package tentez
 type Target interface {
 	getName() string
 	execSwitch(weight Weight, isForce bool, cfg Config) error
+	checkHealth(weight Weight, cfg Config) error
 }
 type Targets interface {
 	targetsSlice() []Target
