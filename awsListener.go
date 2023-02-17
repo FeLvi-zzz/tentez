@@ -139,3 +139,7 @@ func (ls AwsListeners) targetsSlice() (targets []Target) {
 	}
 	return targets
 }
+
+func (l AwsListener) checkHealth(weight Weight, cfg Config) error {
+	return checkSwitchTargetGroupHealth(l.Switch, weight, cfg)
+}
