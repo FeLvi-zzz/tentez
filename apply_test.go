@@ -3,9 +3,7 @@ package tentez
 import (
 	"bytes"
 	"context"
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -34,10 +32,6 @@ func (t targetMock) execSwitch(targetWeight Weight, isForce bool, cfg Config) er
 		return SkipSwitchError{"the new weight target is smaller than current one."}
 	}
 
-	return nil
-}
-
-func (t targetMock) checkHealth(targetWeight Weight, cfg Config) error {
 	return nil
 }
 
@@ -108,32 +102,6 @@ func (m elbv2Mock) DescribeListeners(ctx context.Context, params *elbv2.Describe
 }
 func (m elbv2Mock) DescribeTargetGroups(ctx context.Context, params *elbv2.DescribeTargetGroupsInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeTargetGroupsOutput, error) {
 	return &elbv2.DescribeTargetGroupsOutput{}, m.DescribeListenersError
-}
-func (m elbv2Mock) DescribeTargetHealth(context.Context, *elbv2.DescribeTargetHealthInput, ...func(*elbv2.Options)) (*elbv2.DescribeTargetHealthOutput, error) {
-	rand.Seed(time.Now().UnixNano())
-	i := rand.Intn(2)
-	if i == 0 {
-		return &elbv2.DescribeTargetHealthOutput{
-			TargetHealthDescriptions: []elbv2Types.TargetHealthDescription{
-				{
-					TargetHealth: &elbv2Types.TargetHealth{
-						State: elbv2Types.TargetHealthStateEnumUnhealthy,
-					},
-				},
-			},
-		}, m.DescribeListenersError
-	} else {
-		return &elbv2.DescribeTargetHealthOutput{
-			TargetHealthDescriptions: []elbv2Types.TargetHealthDescription{
-				{
-					TargetHealth: &elbv2Types.TargetHealth{
-						State: elbv2Types.TargetHealthStateEnumHealthy,
-					},
-				},
-			},
-		}, m.DescribeListenersError
-
-	}
 }
 
 func TestExecSwitch(t *testing.T) {
