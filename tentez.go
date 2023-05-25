@@ -10,6 +10,7 @@ type Tentez interface {
 	Apply(isForce bool) error
 	Get() (map[TargetType]TargetsData, error)
 	Rollback(hasPause bool) error
+	Switch(weights []int, hasPause bool) error
 }
 
 type tentez struct {
@@ -128,4 +129,27 @@ func (t tentez) Rollback(hasPause bool) (err error) {
 		return err
 	}
 	return t.Apply(true)
+}
+
+func (t tentez) Switch(weights []int, hasPause bool) (err error) {
+	t.Steps = []Step{}
+
+	if hasPause {
+		t.Steps = append(t.Steps, Step{
+			Type: StepTypePause,
+		})
+	}
+
+	t.Steps = append(t.Steps, Step{
+		Type: StepTypeSwitch,
+		Weight: Weight{
+			Old: int32(weights[0]),
+			New: int32(weights[1]),
+		},
+	})
+
+	if err = t.Plan(); err != nil {
+		return err
+	}
+	return t.Apply(false)
 }
