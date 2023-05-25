@@ -111,6 +111,7 @@ aws_listener_rules:
 
 ```console
 # rollback
+# if you want to skip the pause step, add `--no-pause` flag.
 $ tentez -f ./examples/example.yaml rollback
 1. pause
 2. switch old:new = 100:0
