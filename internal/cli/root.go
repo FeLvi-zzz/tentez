@@ -9,6 +9,7 @@ import (
 )
 
 var filename = ""
+var noPause = false
 
 var rootCmd = &cobra.Command{
 	Use:   "tentez",
