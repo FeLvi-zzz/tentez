@@ -12,7 +12,6 @@ var applyCmd = &cobra.Command{
 # show plan and apply
 $ tentez -f ./examples/example.yaml apply`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		filename := cmd.Flag("filename").Value.String()
 		t, err := tentez.NewFromYaml(filename)
 		if err != nil {
 			return err

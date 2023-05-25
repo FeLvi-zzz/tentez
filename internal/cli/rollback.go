@@ -12,7 +12,6 @@ var rollbackCmd = &cobra.Command{
 # rollback
 $ tentez -f ./examples/example.yaml rollback`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		filename := cmd.Flag("filename").Value.String()
 		t, err := tentez.NewFromYaml(filename)
 		if err != nil {
 			return err
