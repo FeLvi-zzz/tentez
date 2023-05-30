@@ -19,6 +19,53 @@ type tentez struct {
 	config  Config
 }
 
+var (
+	defaultSteps = []Step{
+		{
+			Type: StepTypePause,
+		},
+		{
+			Type: StepTypeSwitch,
+			Weight: Weight{
+				Old: 70,
+				New: 30,
+			},
+		},
+		{
+			Type:         StepTypeSleep,
+			SleepSeconds: 600,
+		},
+		{
+			Type: StepTypePause,
+		},
+		{
+			Type: StepTypeSwitch,
+			Weight: Weight{
+				Old: 30,
+				New: 70,
+			},
+		},
+		{
+			Type:         StepTypeSleep,
+			SleepSeconds: 600,
+		},
+		{
+			Type: StepTypePause,
+		},
+		{
+			Type: StepTypeSwitch,
+			Weight: Weight{
+				Old: 0,
+				New: 100,
+			},
+		},
+		{
+			Type:         StepTypeSleep,
+			SleepSeconds: 600,
+		},
+	}
+)
+
 func New(targets map[TargetType]Targets, steps []Step) (tentez, error) {
 	config, err := NewConfig()
 	if err != nil {

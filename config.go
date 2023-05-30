@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	rgt "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 )
 
 type elbv2Client interface {
@@ -18,8 +19,13 @@ type elbv2Client interface {
 	elbv2.DescribeTargetGroupsAPIClient
 }
 
+type rgtClient interface {
+	rgt.GetResourcesAPIClient
+}
+
 type Client struct {
 	elbv2 elbv2Client
+	rgt   rgtClient
 }
 
 type IOStreams struct {
@@ -45,10 +51,12 @@ func NewConfig() (Config, error) {
 	}
 
 	elbv2svc := elbv2.NewFromConfig(cfg)
+	rgtsvc := rgt.NewFromConfig(cfg)
 
 	return Config{
 		client: Client{
 			elbv2: elbv2svc,
+			rgt:   rgtsvc,
 		},
 		io: IOStreams{
 			in:  os.Stdin,

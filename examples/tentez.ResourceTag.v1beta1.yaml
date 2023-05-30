@@ -1,0 +1,33 @@
+version: tentez.ResourceTag.v1beta1
+spec:
+  # (optional) map[string]string, filterTags is used to filter resources(e.g. TargetGroup) to be switched.
+  filterTags:
+    Service: tentez
+    Stage: staging
+    foo: bar
+  # (optional) []string, matchingTagKeys is used to identify which resources(e.g. TargetGroup) are related. If you have only one set of old-new resources, you can omit this field.
+  matchingTagKeys:
+    - Role
+  # (required) Object, switchTag is used to identify which resource(e.g. TargetGroup) is old or new.
+  switchTag:
+    key: ClusterName
+    value:
+      old: staging-tentez-1
+      new: staging-tentez-2
+
+# e.g. There are 4 TargetGroups,
+# TargetGroup: staging-tentez-1-external-tg
+# Tags: Service=tentez, Stage=staging, Role=external, ClusterName=staging-tentez-1
+
+# TargetGroup: staging-tentez-1-external-tg
+# Tags: Service=tentez, Stage=staging, Role=external, ClusterName=staging-tentez-1
+
+# TargetGroup: staging-tentez-2-internal-tg
+# Tags: Service=tentez, Stage=staging, Role=internal, ClusterName=staging-tentez-2
+
+# TargetGroup: staging-tentez-2-internal-tg
+# Tags: Service=tentez, Stage=staging, Role=internal, ClusterName=staging-tentez-2
+
+# Tentez makes tentez.yaml to switch TargetGroup
+# from staging-tentez-1-external-tg to staging-tentez-2-external-tg and
+# from staging-tentez-1-internal-tg to staging-tentez-2-internal-tg.
