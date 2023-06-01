@@ -26,7 +26,7 @@ type AwsListenerData struct {
 
 func (l AwsListener) execSwitch(targetWeight Weight, isForce bool, cfg Config) error {
 	// avoid rate limit
-	time.Sleep(1 * time.Second)
+	cfg.clock.Sleep(1 * time.Second)
 
 	listenerData, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
 		ListenerArns: []string{l.Target},

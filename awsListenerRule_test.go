@@ -6,10 +6,23 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elbv2Types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"gopkg.in/yaml.v3"
 )
 
 func TestAwsListenerRule_execSwitch(t *testing.T) {
+	describeRulesResult := elbv2MockDescribeRulesResult{
+		Value: elbv2.DescribeRulesOutput{
+			Rules: []elbv2Types.Rule{
+				{
+					Actions: NewDummyActions(),
+				},
+			},
+		},
+	}
+
 	cases := []struct {
 		isError         bool
 		isForce         bool
@@ -28,6 +41,9 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 					New: "newTarget",
 				},
 			},
+			elbv2Mock: elbv2Mock{
+				DescribeRulesResult: describeRulesResult,
+			},
 		},
 		{
 			isError: true,
@@ -45,7 +61,10 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 				New: 70,
 			},
 			elbv2Mock: elbv2Mock{
-				ModifyRuleError: fmt.Errorf("error"),
+				DescribeRulesResult: describeRulesResult,
+				ModifyRuleResult: elbv2MockModifyRuleResult{
+					Error: fmt.Errorf("error"),
+				},
 			},
 		},
 		{
@@ -63,6 +82,9 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 				Old: 100,
 				New: 0,
 			},
+			elbv2Mock: elbv2Mock{
+				DescribeRulesResult: describeRulesResult,
+			},
 		},
 		{
 			isError: false,
@@ -79,6 +101,9 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 				Old: 100,
 				New: 0,
 			},
+			elbv2Mock: elbv2Mock{
+				DescribeRulesResult: describeRulesResult,
+			},
 		},
 	}
 
@@ -92,6 +117,7 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 				out: bytes.NewBufferString(""),
 				err: bytes.NewBufferString(""),
 			},
+			clock: clockMock{},
 		})
 
 		if c.isError != (err != nil) {
@@ -137,6 +163,18 @@ func TestAwsListenerRules_fetchData(t *testing.T) {
 					},
 				},
 			},
+			elbv2Mock: elbv2Mock{
+				DescribeRulesResult: elbv2MockDescribeRulesResult{
+					Value: elbv2.DescribeRulesOutput{
+						Rules: []elbv2Types.Rule{
+							{
+								RuleArn: aws.String("validTarget"),
+								Actions: NewDummyActions(),
+							},
+						},
+					},
+				},
+			},
 		},
 		{
 			isError: true,
@@ -152,7 +190,9 @@ func TestAwsListenerRules_fetchData(t *testing.T) {
 				},
 			},
 			elbv2Mock: elbv2Mock{
-				DescribeRulesError: fmt.Errorf("error"),
+				DescribeRulesResult: elbv2MockDescribeRulesResult{
+					Error: fmt.Errorf("error"),
+				},
 			},
 		},
 	}

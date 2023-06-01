@@ -20,7 +20,7 @@ type tentez struct {
 }
 
 func New(targets map[TargetType]Targets, steps []Step) (tentez, error) {
-	config, err := newConfig()
+	config, err := NewConfig()
 	if err != nil {
 		return tentez{}, err
 	}

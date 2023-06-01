@@ -6,10 +6,23 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elbv2Types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"gopkg.in/yaml.v3"
 )
 
 func TestAwsListener_execSwitch(t *testing.T) {
+	describeListenersResult := elbv2MockDescribeListenersResult{
+		Value: elbv2.DescribeListenersOutput{
+			Listeners: []elbv2Types.Listener{
+				{
+					ListenerArn:    aws.String("validTarget"),
+					DefaultActions: NewDummyActions(),
+				},
+			},
+		},
+	}
 	cases := []struct {
 		isError     bool
 		isForce     bool
@@ -28,6 +41,9 @@ func TestAwsListener_execSwitch(t *testing.T) {
 					New: "newTarget",
 				},
 			},
+			elbv2Mock: elbv2Mock{
+				DescribeListenersResult: describeListenersResult,
+			},
 		},
 		{
 			isError: true,
@@ -45,7 +61,10 @@ func TestAwsListener_execSwitch(t *testing.T) {
 				New: 70,
 			},
 			elbv2Mock: elbv2Mock{
-				ModifyListenerError: fmt.Errorf("error"),
+				DescribeListenersResult: describeListenersResult,
+				ModifyListenerResult: elbv2MockModifyListenerResult{
+					Error: fmt.Errorf("error"),
+				},
 			},
 		},
 		{
@@ -63,6 +82,9 @@ func TestAwsListener_execSwitch(t *testing.T) {
 				Old: 100,
 				New: 0,
 			},
+			elbv2Mock: elbv2Mock{
+				DescribeListenersResult: describeListenersResult,
+			},
 		},
 		{
 			isError: false,
@@ -79,6 +101,9 @@ func TestAwsListener_execSwitch(t *testing.T) {
 				Old: 100,
 				New: 0,
 			},
+			elbv2Mock: elbv2Mock{
+				DescribeListenersResult: describeListenersResult,
+			},
 		},
 	}
 
@@ -92,6 +117,7 @@ func TestAwsListener_execSwitch(t *testing.T) {
 				out: bytes.NewBufferString(""),
 				err: bytes.NewBufferString(""),
 			},
+			clock: clockMock{},
 		})
 
 		if c.isError != (err != nil) {
@@ -101,6 +127,16 @@ func TestAwsListener_execSwitch(t *testing.T) {
 }
 
 func TestAwsListeners_fetchData(t *testing.T) {
+	describeListenersResult := elbv2MockDescribeListenersResult{
+		Value: elbv2.DescribeListenersOutput{
+			Listeners: []elbv2Types.Listener{
+				{
+					ListenerArn:    aws.String("validTarget"),
+					DefaultActions: NewDummyActions(),
+				},
+			},
+		},
+	}
 	cases := []struct {
 		isError      bool
 		expect       interface{}
@@ -137,6 +173,9 @@ func TestAwsListeners_fetchData(t *testing.T) {
 					},
 				},
 			},
+			elbv2Mock: elbv2Mock{
+				DescribeListenersResult: describeListenersResult,
+			},
 		},
 		{
 			isError: true,
@@ -152,7 +191,9 @@ func TestAwsListeners_fetchData(t *testing.T) {
 				},
 			},
 			elbv2Mock: elbv2Mock{
-				DescribeListenersError: fmt.Errorf("error"),
+				DescribeListenersResult: elbv2MockDescribeListenersResult{
+					Error: fmt.Errorf("error"),
+				},
 			},
 		},
 	}
