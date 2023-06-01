@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elbv2Types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	rgt "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 )
 
 type targetsMock []targetMock
@@ -80,6 +81,15 @@ type elbv2Mock struct {
 	DescribeTargetGroupsResult elbv2MockDescribeTargetGroupsResult
 }
 
+type rgtMockGetResourcesResult struct {
+	Value rgt.GetResourcesOutput
+	Error error
+}
+
+type rgtMock struct {
+	GetResourcesResult rgtMockGetResourcesResult
+}
+
 type clockMock struct{}
 
 func (c clockMock) Sleep(time.Duration) {}
@@ -118,6 +128,10 @@ func (m elbv2Mock) DescribeListeners(ctx context.Context, params *elbv2.Describe
 }
 func (m elbv2Mock) DescribeTargetGroups(ctx context.Context, params *elbv2.DescribeTargetGroupsInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeTargetGroupsOutput, error) {
 	return &m.DescribeTargetGroupsResult.Value, m.DescribeTargetGroupsResult.Error
+}
+
+func (m rgtMock) GetResources(ctx context.Context, params *rgt.GetResourcesInput, optFns ...func(*rgt.Options)) (*rgt.GetResourcesOutput, error) {
+	return &m.GetResourcesResult.Value, m.GetResourcesResult.Error
 }
 
 func TestExecSwitch(t *testing.T) {
