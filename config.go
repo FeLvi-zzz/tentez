@@ -4,9 +4,11 @@ import (
 	"context"
 	"io"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	rgt "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 )
 
 type elbv2Client interface {
@@ -17,8 +19,13 @@ type elbv2Client interface {
 	elbv2.DescribeTargetGroupsAPIClient
 }
 
+type rgtClient interface {
+	rgt.GetResourcesAPIClient
+}
+
 type Client struct {
 	elbv2 elbv2Client
+	rgt   rgtClient
 }
 
 type IOStreams struct {
@@ -30,24 +37,38 @@ type IOStreams struct {
 type Config struct {
 	client Client
 	io     IOStreams
+	clock  Clock
 }
 
-func newConfig() (Config, error) {
+type Clock interface {
+	Sleep(duration time.Duration)
+}
+
+func NewConfig() (Config, error) {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		return Config{}, err
 	}
 
 	elbv2svc := elbv2.NewFromConfig(cfg)
+	rgtsvc := rgt.NewFromConfig(cfg)
 
 	return Config{
 		client: Client{
 			elbv2: elbv2svc,
+			rgt:   rgtsvc,
 		},
 		io: IOStreams{
 			in:  os.Stdin,
 			out: os.Stdout,
 			err: os.Stderr,
 		},
+		clock: &RealClock{},
 	}, nil
+}
+
+type RealClock struct{}
+
+func (c RealClock) Sleep(duration time.Duration) {
+	time.Sleep(duration)
 }

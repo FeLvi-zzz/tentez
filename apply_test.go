@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elbv2Types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	rgt "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 )
 
 type targetsMock []targetMock
@@ -47,12 +49,50 @@ func (t targetsMock) fetchData(cfg Config) (TargetsData, error) {
 	return []Target{}, nil
 }
 
-type elbv2Mock struct {
-	ModifyListenerError    error
-	ModifyRuleError        error
-	DescribeRulesError     error
-	DescribeListenersError error
+type elbv2MockModifyListenerResult struct {
+	Value elbv2.ModifyListenerOutput
+	Error error
 }
+
+type elbv2MockModifyRuleResult struct {
+	Value elbv2.ModifyRuleOutput
+	Error error
+}
+
+type elbv2MockDescribeRulesResult struct {
+	Value elbv2.DescribeRulesOutput
+	Error error
+}
+
+type elbv2MockDescribeListenersResult struct {
+	Value elbv2.DescribeListenersOutput
+	Error error
+}
+
+type elbv2MockDescribeTargetGroupsResult struct {
+	Value elbv2.DescribeTargetGroupsOutput
+	Error error
+}
+type elbv2Mock struct {
+	ModifyListenerResult       elbv2MockModifyListenerResult
+	ModifyRuleResult           elbv2MockModifyRuleResult
+	DescribeRulesResult        elbv2MockDescribeRulesResult
+	DescribeListenersResult    elbv2MockDescribeListenersResult
+	DescribeTargetGroupsResult elbv2MockDescribeTargetGroupsResult
+}
+
+type rgtMockGetResourcesResult struct {
+	Value rgt.GetResourcesOutput
+	Error error
+}
+
+type rgtMock struct {
+	GetResourcesResult rgtMockGetResourcesResult
+}
+
+type clockMock struct{}
+
+func (c clockMock) Sleep(time.Duration) {}
 
 func NewDummyActions() []elbv2Types.Action {
 	return []elbv2Types.Action{
@@ -75,33 +115,23 @@ func NewDummyActions() []elbv2Types.Action {
 }
 
 func (m elbv2Mock) ModifyListener(ctx context.Context, params *elbv2.ModifyListenerInput, optFns ...func(*elbv2.Options)) (*elbv2.ModifyListenerOutput, error) {
-	return &elbv2.ModifyListenerOutput{}, m.ModifyListenerError
+	return &m.ModifyListenerResult.Value, m.ModifyListenerResult.Error
 }
 func (m elbv2Mock) ModifyRule(ctx context.Context, params *elbv2.ModifyRuleInput, optFns ...func(*elbv2.Options)) (*elbv2.ModifyRuleOutput, error) {
-	return &elbv2.ModifyRuleOutput{}, m.ModifyRuleError
+	return &m.ModifyRuleResult.Value, m.ModifyRuleResult.Error
 }
 func (m elbv2Mock) DescribeRules(ctx context.Context, params *elbv2.DescribeRulesInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeRulesOutput, error) {
-	return &elbv2.DescribeRulesOutput{
-		Rules: []elbv2Types.Rule{
-			{
-				RuleArn: &params.RuleArns[0],
-				Actions: NewDummyActions(),
-			},
-		},
-	}, m.DescribeRulesError
+	return &m.DescribeRulesResult.Value, m.DescribeRulesResult.Error
 }
 func (m elbv2Mock) DescribeListeners(ctx context.Context, params *elbv2.DescribeListenersInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeListenersOutput, error) {
-	return &elbv2.DescribeListenersOutput{
-		Listeners: []elbv2Types.Listener{
-			{
-				ListenerArn:    &params.ListenerArns[0],
-				DefaultActions: NewDummyActions(),
-			},
-		},
-	}, m.DescribeListenersError
+	return &m.DescribeListenersResult.Value, m.DescribeListenersResult.Error
 }
 func (m elbv2Mock) DescribeTargetGroups(ctx context.Context, params *elbv2.DescribeTargetGroupsInput, optFns ...func(*elbv2.Options)) (*elbv2.DescribeTargetGroupsOutput, error) {
-	return &elbv2.DescribeTargetGroupsOutput{}, m.DescribeListenersError
+	return &m.DescribeTargetGroupsResult.Value, m.DescribeTargetGroupsResult.Error
+}
+
+func (m rgtMock) GetResources(ctx context.Context, params *rgt.GetResourcesInput, optFns ...func(*rgt.Options)) (*rgt.GetResourcesOutput, error) {
+	return &m.GetResourcesResult.Value, m.GetResourcesResult.Error
 }
 
 func TestExecSwitch(t *testing.T) {
@@ -164,6 +194,7 @@ func TestExecSwitch(t *testing.T) {
 				out: bytes.NewBufferString(""),
 				err: bytes.NewBufferString(""),
 			},
+			clock: clockMock{},
 		})
 
 		if err != nil {

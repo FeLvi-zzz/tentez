@@ -54,53 +54,6 @@ type ChangeValueElbV2TargetActionForwardTargetGroups struct {
 	Weight int    `json:"weight"`
 }
 
-var (
-	defaultSteps = []Step{
-		{
-			Type: StepTypePause,
-		},
-		{
-			Type: StepTypeSwitch,
-			Weight: Weight{
-				Old: 70,
-				New: 30,
-			},
-		},
-		{
-			Type:         StepTypeSleep,
-			SleepSeconds: 600,
-		},
-		{
-			Type: StepTypePause,
-		},
-		{
-			Type: StepTypeSwitch,
-			Weight: Weight{
-				Old: 30,
-				New: 70,
-			},
-		},
-		{
-			Type:         StepTypeSleep,
-			SleepSeconds: 600,
-		},
-		{
-			Type: StepTypePause,
-		},
-		{
-			Type: StepTypeSwitch,
-			Weight: Weight{
-				Old: 0,
-				New: 100,
-			},
-		},
-		{
-			Type:         StepTypeSleep,
-			SleepSeconds: 600,
-		},
-	}
-)
-
 func (c ChangeValueAwsListener) GetSwitchTarget() (string, error) {
 	if len(c.DefaultActions) != 1 {
 		return "", fmt.Errorf("cannot get default_action; %+v", c)

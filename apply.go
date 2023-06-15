@@ -60,7 +60,7 @@ func sleep(sec int, cfg Config) {
 	go func() {
 		defer wg.Done()
 
-		time.Sleep(seconds)
+		cfg.clock.Sleep(seconds)
 		ticker.Stop()
 		tickerStop <- true
 	}()

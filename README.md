@@ -189,6 +189,13 @@ For instance, you can generate a config from the below terraform diff.
  }
 ```
 
+```console
+# generate config from tagged AWS resouces
+$ tentez generate-config resource-tag -f examples/tentez.ResourceTag.v1beta1.yaml
+```
+
+Refer examples/tentez.ResourceTag.v1beta1.yaml.
+
 # available resources
 - AWS
   - Listener
