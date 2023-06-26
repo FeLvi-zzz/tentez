@@ -43,7 +43,7 @@ build-windows-amd64:
 build: $(BINARIES)
 
 $(BINARIES): $(GO_FILES)
-	go build -ldflags="-X github.com/FeLvi-zzz/tentez.Revision=$(shell git rev-parse --short HEAD)" -o $@-$(GOOS)-$(GOARCH)$(SUFFIX) $(@:$(BINDIR)/%=$(ROOT_PACKAGE)/cmd/%)
+	CGO_ENABLED=0 go build -ldflags="-X github.com/FeLvi-zzz/tentez.Revision=$(shell git rev-parse --short HEAD)" -o $@-$(GOOS)-$(GOARCH)$(SUFFIX) $(@:$(BINDIR)/%=$(ROOT_PACKAGE)/cmd/%)
 	
 clean:
 	rm $(BINARIES)*
