@@ -19,9 +19,10 @@ type AwsListenerRule struct {
 type AwsListenerRules []AwsListenerRule
 
 type AwsListenerRuleData struct {
-	Name            string                `yaml:"name"`
-	ListenerRuleArn string                `yaml:"target"`
-	Weights         []AwsTargetGroupTuple `yaml:"weights"`
+	Name              string                      `yaml:"name"`
+	ListenerRuleArn   string                      `yaml:"target"`
+	Weights           []AwsTargetGroupTuple       `yaml:"weights"`
+	AdditionalActions []elbv2Types.ActionTypeEnum `yaml:"additional_actions,omitempty"`
 }
 
 func (r AwsListenerRule) execSwitch(targetWeight Weight, isForce bool, cfg Config) error {
@@ -43,7 +44,7 @@ func (r AwsListenerRule) execSwitch(targetWeight Weight, isForce bool, cfg Confi
 	tgWeight := Weight{}
 	for _, action := range rule.Actions {
 		if action.Type != elbv2Types.ActionTypeEnumForward {
-			return fmt.Errorf("invalid action type: %s", action.Type)
+			continue
 		}
 
 		for _, tgTuple := range action.ForwardConfig.TargetGroups {
@@ -54,6 +55,9 @@ func (r AwsListenerRule) execSwitch(targetWeight Weight, isForce bool, cfg Confi
 				tgWeight.New = *tgTuple.Weight
 			}
 		}
+	}
+	if tgWeight.Old == 0 && tgWeight.New == 0 {
+		return fmt.Errorf("%s does not have forward action", r.Target)
 	}
 
 	if !isForce {
@@ -68,7 +72,7 @@ func (r AwsListenerRule) execSwitch(targetWeight Weight, isForce bool, cfg Confi
 
 	_, err = cfg.client.elbv2.ModifyRule(context.TODO(), &elbv2.ModifyRuleInput{
 		RuleArn: aws.String(r.Target),
-		Actions: compactActions(r.Switch, targetWeight),
+		Actions: makeNewActions(rule.Actions, r.Switch, targetWeight),
 	})
 
 	return err
@@ -118,23 +122,28 @@ func (rs AwsListenerRules) fetchData(cfg Config) (TargetsData, error) {
 			return nil, fmt.Errorf("%s is a default listener rule. Use `aws_listeners`", aws.ToString(rule.RuleArn))
 		}
 
-		for _, action := range rule.Actions {
-			targetGroupTuples := []AwsTargetGroupTuple{}
+		targetGroupTuples := []AwsTargetGroupTuple{}
+		additionalActions := make([]elbv2Types.ActionTypeEnum, 0, len(rule.Actions))
 
-			if action.Type == elbv2Types.ActionTypeEnumForward {
-				for _, tgTuple := range action.ForwardConfig.TargetGroups {
-					targetGroupTuples = append(targetGroupTuples, AwsTargetGroupTuple{
-						Type:           ruleMap[aws.ToString(rule.RuleArn)].Switch.getType(aws.ToString(tgTuple.TargetGroupArn)),
-						TargetGroupArn: aws.ToString(tgTuple.TargetGroupArn),
-						Weight:         aws.ToInt32(tgTuple.Weight),
-					})
-				}
+		for _, action := range rule.Actions {
+			if action.Type != elbv2Types.ActionTypeEnumForward {
+				additionalActions = append(additionalActions, action.Type)
+				continue
+			}
+
+			for _, tgTuple := range action.ForwardConfig.TargetGroups {
+				targetGroupTuples = append(targetGroupTuples, AwsTargetGroupTuple{
+					Type:           ruleMap[aws.ToString(rule.RuleArn)].Switch.getType(aws.ToString(tgTuple.TargetGroupArn)),
+					TargetGroupArn: aws.ToString(tgTuple.TargetGroupArn),
+					Weight:         aws.ToInt32(tgTuple.Weight),
+				})
 			}
 
 			res = append(res, AwsListenerRuleData{
-				Name:            ruleMap[aws.ToString(rule.RuleArn)].Name,
-				ListenerRuleArn: aws.ToString(rule.RuleArn),
-				Weights:         targetGroupTuples,
+				Name:              ruleMap[aws.ToString(rule.RuleArn)].Name,
+				ListenerRuleArn:   aws.ToString(rule.RuleArn),
+				Weights:           targetGroupTuples,
+				AdditionalActions: additionalActions,
 			})
 		}
 	}
