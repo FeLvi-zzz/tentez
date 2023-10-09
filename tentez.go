@@ -1,7 +1,9 @@
 package tentez
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -17,6 +19,7 @@ type tentez struct {
 	Targets map[TargetType]Targets
 	Steps   []Step
 	config  Config
+	ui      Ui
 }
 
 var (
@@ -76,20 +79,25 @@ func New(targets map[TargetType]Targets, steps []Step) (tentez, error) {
 		Targets: targets,
 		Steps:   steps,
 		config:  config,
+		ui: &cui{
+			in:  os.Stdin,
+			out: os.Stdout,
+			err: os.Stderr,
+		},
 	}, nil
 }
 
 func (t tentez) Apply(isForce bool) (err error) {
 	for i, step := range t.Steps {
-		fmt.Fprintf(t.config.io.out, "\n%d / %d steps\n", i+1, len(t.Steps))
+		t.ui.Outputf("\n%d / %d steps\n", i+1, len(t.Steps))
 
 		switch step.Type {
 		case StepTypePause:
-			pause(t.config)
+			t.pause()
 		case StepTypeSleep:
-			sleep(step.SleepSeconds, t.config)
+			t.sleep(step.SleepSeconds)
 		case StepTypeSwitch:
-			err = execSwitch(t.Targets, step.Weight, isForce, t.config)
+			err = t.execSwitch(step.Weight, isForce)
 		default:
 			return fmt.Errorf(`unknown step type "%s"`, step.Type)
 		}
@@ -98,10 +106,10 @@ func (t tentez) Apply(isForce bool) (err error) {
 			return err
 		}
 
-		fmt.Fprintln(t.config.io.out, "")
+		t.ui.Outputln("")
 	}
 
-	fmt.Fprintln(t.config.io.out, "Apply complete!")
+	t.ui.Outputln("Apply complete!")
 
 	return nil
 }
@@ -134,7 +142,7 @@ func (t tentez) Plan() error {
 		}
 	}
 
-	fmt.Fprint(t.config.io.out, output.String())
+	t.ui.Outputf(output.String())
 
 	return nil
 }
@@ -144,7 +152,11 @@ func (t tentez) Get() (targetsMap map[TargetType]TargetsData, err error) {
 	for targetType, targetResources := range t.Targets {
 		data, err := targetResources.fetchData(t.config)
 		if err != nil {
-			return nil, err
+			if errors.Is(err, &FailedFetchTargetGroupsError{}) {
+				t.ui.OutputErrln(err.Error())
+			} else {
+				return nil, err
+			}
 		}
 		if data == nil {
 			continue

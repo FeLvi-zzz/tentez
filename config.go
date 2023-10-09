@@ -2,10 +2,10 @@ package tentez
 
 import (
 	"context"
-	"io"
-	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/config"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	rgt "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
@@ -28,15 +28,8 @@ type Client struct {
 	rgt   rgtClient
 }
 
-type IOStreams struct {
-	in  io.Reader
-	out io.Writer
-	err io.Writer
-}
-
 type Config struct {
 	client Client
-	io     IOStreams
 	clock  Clock
 }
 
@@ -45,7 +38,9 @@ type Clock interface {
 }
 
 func NewConfig() (Config, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRetryer(func() aws.Retryer {
+		return retry.AddWithMaxAttempts(retry.NewStandard(), 10)
+	}))
 	if err != nil {
 		return Config{}, err
 	}
@@ -57,11 +52,6 @@ func NewConfig() (Config, error) {
 		client: Client{
 			elbv2: elbv2svc,
 			rgt:   rgtsvc,
-		},
-		io: IOStreams{
-			in:  os.Stdin,
-			out: os.Stdout,
-			err: os.Stderr,
 		},
 		clock: &RealClock{},
 	}, nil

@@ -1,7 +1,6 @@
 package tentez
 
 import (
-	"bytes"
 	"context"
 	"testing"
 	"time"
@@ -93,6 +92,14 @@ type rgtMock struct {
 type clockMock struct{}
 
 func (c clockMock) Sleep(time.Duration) {}
+
+type dummyUi struct{}
+
+func (d *dummyUi) Ask(string) string                 { return "" }
+func (d *dummyUi) Outputln(string)                   {}
+func (d *dummyUi) Outputf(string, ...interface{})    {}
+func (d *dummyUi) OutputErrln(string)                {}
+func (d *dummyUi) OutputErrf(string, ...interface{}) {}
 
 func NewDummyForwardAction() elbv2Types.Action {
 	return elbv2Types.Action{
@@ -190,17 +197,16 @@ func TestExecSwitch(t *testing.T) {
 	}
 	for _, c := range cases {
 		targets := c.Targets
-		err := execSwitch(targets, c.TargetWeight, c.IsForce, Config{
-			client: Client{
-				elbv2: elbv2Mock{},
+		tz := tentez{
+			Targets: targets,
+			config: Config{
+				client: Client{
+					elbv2: elbv2Mock{},
+				},
 			},
-			io: IOStreams{
-				in:  bytes.NewBufferString(""),
-				out: bytes.NewBufferString(""),
-				err: bytes.NewBufferString(""),
-			},
-			clock: clockMock{},
-		})
+			ui: &dummyUi{},
+		}
+		err := tz.execSwitch(c.TargetWeight, c.IsForce)
 
 		if err != nil {
 			t.Errorf("expected no error, but throw %v", err)

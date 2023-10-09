@@ -1,7 +1,6 @@
 package tentez
 
 import (
-	"bytes"
 	"fmt"
 	"reflect"
 	"testing"
@@ -141,11 +140,6 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 			client: Client{
 				elbv2: c.elbv2Mock,
 			},
-			io: IOStreams{
-				in:  bytes.NewBufferString(""),
-				out: bytes.NewBufferString(""),
-				err: bytes.NewBufferString(""),
-			},
 			clock: clockMock{},
 		})
 
@@ -232,11 +226,6 @@ func TestAwsListenerRules_fetchData(t *testing.T) {
 		got, gotErr := c.awsListenerRules.fetchData(Config{
 			client: Client{
 				elbv2: c.elbv2Mock,
-			},
-			io: IOStreams{
-				in:  bytes.NewBufferString(""),
-				out: bytes.NewBufferString(""),
-				err: bytes.NewBufferString(""),
 			},
 		})
 

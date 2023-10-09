@@ -3,7 +3,6 @@ package tentez
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -26,9 +25,6 @@ type AwsListenerData struct {
 }
 
 func (l AwsListener) execSwitch(targetWeight Weight, isForce bool, cfg Config) error {
-	// avoid rate limit
-	cfg.clock.Sleep(1 * time.Second)
-
 	listenerData, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
 		ListenerArns: []string{l.Target},
 	})
@@ -91,12 +87,9 @@ func (ls AwsListeners) fetchData(cfg Config) (TargetsData, error) {
 		listenerMap[listener.Target] = listener
 	}
 
-	for _, tgArnsBatch := range chunk(tgArns, maxDescribeTargetGroupsItems) {
-		if _, err := cfg.client.elbv2.DescribeTargetGroups(context.TODO(), &elbv2.DescribeTargetGroupsInput{
-			TargetGroupArns: tgArnsBatch,
-		}); err != nil {
-			fmt.Fprintln(cfg.io.err, err.Error())
-		}
+	errTgs, err := checkTargetGroupsExistense(cfg.client.elbv2, tgArns)
+	if err != nil {
+		return nil, err
 	}
 
 	listeners := []elbv2Types.Listener{}
@@ -139,7 +132,7 @@ func (ls AwsListeners) fetchData(cfg Config) (TargetsData, error) {
 		})
 	}
 
-	return res, nil
+	return res, NewFailedFetchTargetGroupsError(errTgs)
 }
 
 func (ls AwsListeners) targetsSlice() (targets []Target) {

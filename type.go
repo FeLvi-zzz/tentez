@@ -130,3 +130,23 @@ type SkipSwitchError struct {
 func (s SkipSwitchError) Error() string {
 	return fmt.Sprintf("skip switching: %s", s.Message)
 }
+
+type FailedFetchTargetGroupsError struct {
+	tgs []string
+}
+
+func NewFailedFetchTargetGroupsError(tgs []string) error {
+	if len(tgs) == 0 {
+		return nil
+	}
+	return &FailedFetchTargetGroupsError{tgs: tgs}
+}
+
+func (f *FailedFetchTargetGroupsError) Error() string {
+	return fmt.Sprintf("TargetGroupsNotFound: %v", f.tgs)
+}
+
+func (f *FailedFetchTargetGroupsError) Is(target error) bool {
+	_, ok := target.(*FailedFetchTargetGroupsError)
+	return f != nil && ok
+}
