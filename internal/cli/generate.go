@@ -99,6 +99,8 @@ var generateConfigResourceTagCmd = &cobra.Command{
 # refer https://github.com/FeLvi-zzz/tentez/blob/master/examples/tentez.ResourceTag.v1beta1.yaml.
 $ tentez generate-config resource-tag -f examples/tentez.ResourceTag.v1beta1.yaml -o tentez.yaml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Context()
+
 		data, err := os.ReadFile(filename)
 		if err != nil {
 			return fmt.Errorf("cannot read file: %w", err)
@@ -117,12 +119,13 @@ $ tentez generate-config resource-tag -f examples/tentez.ResourceTag.v1beta1.yam
 			if err := yaml.Unmarshal(data, &config); err != nil {
 				return fmt.Errorf("cannot parse yaml: %w", err)
 			}
-			cfg, err := tentez.NewConfig()
+			cfg, err := tentez.NewConfig(ctx)
 			if err != nil {
 				return fmt.Errorf("cannot create config: %w", err)
 			}
 			spec := config.Spec
 			configYaml, err = tentez.GenerateConfigFromResourceTags(
+				ctx,
 				spec.FilterTags,
 				spec.MatchingTagKeys,
 				spec.SwitchTag.Key,

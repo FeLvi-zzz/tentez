@@ -1,6 +1,7 @@
 package tentez
 
 import (
+	"context"
 	"errors"
 	"os"
 	"sync"
@@ -67,7 +68,7 @@ func (t tentez) sleep(sec int) {
 	t.ui.Outputln("Resume")
 }
 
-func (t tentez) execSwitch(weight Weight, isForce bool) error {
+func (t tentez) execSwitch(ctx context.Context, weight Weight, isForce bool) error {
 	t.ui.Outputf("Switch old:new = %d:%d\n", weight.Old, weight.New)
 
 	i := 0
@@ -76,7 +77,7 @@ func (t tentez) execSwitch(weight Weight, isForce bool) error {
 			i++
 
 			t.ui.Outputf("%d. %s ", i, target.getName())
-			if err := target.execSwitch(weight, isForce, t.config); err != nil {
+			if err := target.execSwitch(ctx, weight, isForce, t.config); err != nil {
 				if !errors.As(err, &SkipSwitchError{}) {
 					return err
 				}

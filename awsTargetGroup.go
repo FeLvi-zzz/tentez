@@ -9,7 +9,7 @@ import (
 )
 
 // checkTargetGroupsExistense returns the target groups which are not exist.
-func checkTargetGroupsExistense(c elbv2Client, tgArns []string) ([]string, error) {
+func checkTargetGroupsExistense(ctx context.Context, c elbv2Client, tgArns []string) ([]string, error) {
 	// dedup
 	m := map[string]struct{}{}
 	for _, tgArn := range tgArns {
@@ -18,7 +18,7 @@ func checkTargetGroupsExistense(c elbv2Client, tgArns []string) ([]string, error
 
 	errTgs := []string{}
 	for tgArn := range m {
-		if _, err := c.DescribeTargetGroups(context.TODO(), &elbv2.DescribeTargetGroupsInput{
+		if _, err := c.DescribeTargetGroups(ctx, &elbv2.DescribeTargetGroupsInput{
 			TargetGroupArns: []string{tgArn},
 		}); err != nil {
 			var tgnf *elbv2Types.TargetGroupNotFoundException

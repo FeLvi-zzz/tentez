@@ -37,8 +37,8 @@ type Clock interface {
 	Sleep(duration time.Duration)
 }
 
-func NewConfig() (Config, error) {
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRetryer(func() aws.Retryer {
+func NewConfig(ctx context.Context) (Config, error) {
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithRetryer(func() aws.Retryer {
 		return retry.AddWithMaxAttempts(retry.NewStandard(), 10)
 	}))
 	if err != nil {

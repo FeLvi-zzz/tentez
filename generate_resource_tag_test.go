@@ -1,6 +1,7 @@
 package tentez
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -187,7 +188,7 @@ func TestGenerateConfigFromResourceTags(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GenerateConfigFromResourceTags(tt.args.filterTags, tt.args.matchingTagKeys, tt.args.switchKey, tt.args.oldValue, tt.args.newValue, tt.args.cfg)
+			got, err := GenerateConfigFromResourceTags(context.TODO(), tt.args.filterTags, tt.args.matchingTagKeys, tt.args.switchKey, tt.args.oldValue, tt.args.newValue, tt.args.cfg)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GenerateConfigFromResourceTags() error = %v, wantErr %v", err, tt.wantErr)
 				return

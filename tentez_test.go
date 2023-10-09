@@ -1,6 +1,7 @@
 package tentez_test
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/FeLvi-zzz/tentez"
@@ -9,6 +10,7 @@ import (
 
 func Example() {
 	t, err := tentez.New(
+		context.TODO(),
 		map[tentez.TargetType]tentez.Targets{
 			tentez.TargetTypeAwsListenerRule: tentez.AwsListenerRules([]tentez.AwsListenerRule{}),
 			tentez.TargetTypeAwsListener:     tentez.AwsListeners([]tentez.AwsListener{}),
@@ -23,7 +25,7 @@ func Example() {
 		return
 	}
 
-	targetsData, err := t.Get()
+	targetsData, err := t.Get(context.TODO())
 	if err != nil {
 		return
 	}

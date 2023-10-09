@@ -24,8 +24,8 @@ type AwsListenerData struct {
 	AdditionalActions []elbv2Types.ActionTypeEnum `yaml:"additional_actions,omitempty"`
 }
 
-func (l AwsListener) execSwitch(targetWeight Weight, isForce bool, cfg Config) error {
-	listenerData, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
+func (l AwsListener) execSwitch(ctx context.Context, targetWeight Weight, isForce bool, cfg Config) error {
+	listenerData, err := cfg.client.elbv2.DescribeListeners(ctx, &elbv2.DescribeListenersInput{
 		ListenerArns: []string{l.Target},
 	})
 	if err != nil {
@@ -61,7 +61,7 @@ func (l AwsListener) execSwitch(targetWeight Weight, isForce bool, cfg Config) e
 		}
 	}
 
-	_, err = cfg.client.elbv2.ModifyListener(context.TODO(), &elbv2.ModifyListenerInput{
+	_, err = cfg.client.elbv2.ModifyListener(ctx, &elbv2.ModifyListenerInput{
 		ListenerArn:    aws.String(l.Target),
 		DefaultActions: makeNewActions(listenerData.Listeners[0].DefaultActions, l.Switch, targetWeight),
 	})
@@ -73,7 +73,7 @@ func (l AwsListener) getName() string {
 	return l.Name
 }
 
-func (ls AwsListeners) fetchData(cfg Config) (TargetsData, error) {
+func (ls AwsListeners) fetchData(ctx context.Context, cfg Config) (TargetsData, error) {
 	if len(ls) == 0 {
 		return nil, nil
 	}
@@ -87,14 +87,14 @@ func (ls AwsListeners) fetchData(cfg Config) (TargetsData, error) {
 		listenerMap[listener.Target] = listener
 	}
 
-	errTgs, err := checkTargetGroupsExistense(cfg.client.elbv2, tgArns)
+	errTgs, err := checkTargetGroupsExistense(ctx, cfg.client.elbv2, tgArns)
 	if err != nil {
 		return nil, err
 	}
 
 	listeners := []elbv2Types.Listener{}
 	for _, listenerArnsBatch := range chunk(listenerArns, maxDescribeListenersItems) {
-		listenersOutput, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
+		listenersOutput, err := cfg.client.elbv2.DescribeListeners(ctx, &elbv2.DescribeListenersInput{
 			ListenerArns: listenerArnsBatch,
 		})
 		if err != nil {

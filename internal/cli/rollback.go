@@ -12,13 +12,15 @@ var rollbackCmd = &cobra.Command{
 # rollback
 $ tentez -f ./examples/example.yaml rollback`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		t, err := tentez.NewFromYaml(filename)
+		ctx := cmd.Context()
+
+		t, err := tentez.NewFromYaml(ctx, filename)
 
 		if err != nil {
 			return err
 		}
 
-		return t.Rollback(!noPause)
+		return t.Rollback(ctx, !noPause)
 	},
 }
 

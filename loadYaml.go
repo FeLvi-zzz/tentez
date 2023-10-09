@@ -1,13 +1,14 @@
 package tentez
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
 )
 
-func NewFromYaml(filename string) (t Tentez, err error) {
+func NewFromYaml(ctx context.Context, filename string) (t Tentez, err error) {
 	if filename == "" {
 		return nil, fmt.Errorf("filename must be specified")
 	}
@@ -23,6 +24,7 @@ func NewFromYaml(filename string) (t Tentez, err error) {
 	}
 
 	return New(
+		ctx,
 		map[TargetType]Targets{
 			TargetTypeAwsListenerRule: yamlStruct.AwsListenerRules,
 			TargetTypeAwsListener:     yamlStruct.AwsListeners,

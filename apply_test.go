@@ -21,7 +21,7 @@ func (t targetMock) getName() string {
 	return t.Name
 }
 
-func (t targetMock) execSwitch(targetWeight Weight, isForce bool, cfg Config) error {
+func (t targetMock) execSwitch(ctx context.Context, targetWeight Weight, isForce bool, cfg Config) error {
 	if isForce {
 		return nil
 	}
@@ -44,7 +44,7 @@ func (t targetsMock) targetsSlice() []Target {
 	return res
 }
 
-func (t targetsMock) fetchData(cfg Config) (TargetsData, error) {
+func (t targetsMock) fetchData(ctx context.Context, cfg Config) (TargetsData, error) {
 	return []Target{}, nil
 }
 
@@ -206,7 +206,7 @@ func TestExecSwitch(t *testing.T) {
 			},
 			ui: &dummyUi{},
 		}
-		err := tz.execSwitch(c.TargetWeight, c.IsForce)
+		err := tz.execSwitch(context.TODO(), c.TargetWeight, c.IsForce)
 
 		if err != nil {
 			t.Errorf("expected no error, but throw %v", err)

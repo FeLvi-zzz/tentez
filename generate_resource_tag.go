@@ -40,6 +40,7 @@ type GenerateConfigResourceTagV1beta1Spec struct {
 }
 
 func GenerateConfigFromResourceTags(
+	ctx context.Context,
 	filterTags map[string]string,
 	matchingTagKeys []string,
 	switchKey string,
@@ -58,7 +59,7 @@ func GenerateConfigFromResourceTags(
 	})
 	resourceTagMappingList := []rgtTypes.ResourceTagMapping{}
 	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(context.TODO())
+		output, err := paginator.NextPage(ctx)
 		if err != nil {
 			return YamlStruct{}, err
 		}
@@ -69,7 +70,7 @@ func GenerateConfigFromResourceTags(
 
 	// fetch listeners from filtered targetGroups
 	for tgArn, switchMapKey := range tgArnKeyMap {
-		lbArn, lbName, err := getLbFromTg(tgArn, cfg)
+		lbArn, lbName, err := getLbFromTg(ctx, tgArn, cfg)
 		if err != nil {
 			return YamlStruct{}, err
 		}
@@ -77,7 +78,7 @@ func GenerateConfigFromResourceTags(
 			continue
 		}
 
-		listenerOutput, err := cfg.client.elbv2.DescribeListeners(context.TODO(), &elbv2.DescribeListenersInput{
+		listenerOutput, err := cfg.client.elbv2.DescribeListeners(ctx, &elbv2.DescribeListenersInput{
 			LoadBalancerArn: aws.String(lbArn),
 		})
 		if err != nil {
@@ -85,7 +86,7 @@ func GenerateConfigFromResourceTags(
 		}
 
 		for _, listener := range listenerOutput.Listeners {
-			ruleOutput, err := cfg.client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
+			ruleOutput, err := cfg.client.elbv2.DescribeRules(ctx, &elbv2.DescribeRulesInput{
 				ListenerArn: aws.String(*listener.ListenerArn),
 			})
 			if err != nil {
@@ -154,8 +155,8 @@ func buildTagFilters(filterTags map[string]string, matchingTagKeys []string, swi
 	return tagFileters
 }
 
-func getLbFromTg(tgArn string, cfg Config) (string, string, error) {
-	tgOutput, err := cfg.client.elbv2.DescribeTargetGroups(context.TODO(), &elbv2.DescribeTargetGroupsInput{
+func getLbFromTg(ctx context.Context, tgArn string, cfg Config) (string, string, error) {
+	tgOutput, err := cfg.client.elbv2.DescribeTargetGroups(ctx, &elbv2.DescribeTargetGroupsInput{
 		TargetGroupArns: []string{tgArn},
 	})
 	if err != nil {

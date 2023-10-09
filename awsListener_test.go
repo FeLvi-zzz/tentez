@@ -1,6 +1,7 @@
 package tentez
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -138,7 +139,7 @@ func TestAwsListener_execSwitch(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		err := c.awsListener.execSwitch(c.weight, c.isForce, Config{
+		err := c.awsListener.execSwitch(context.TODO(), c.weight, c.isForce, Config{
 			client: Client{
 				elbv2: c.elbv2Mock,
 			},
@@ -226,7 +227,7 @@ func TestAwsListeners_fetchData(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		got, gotErr := c.awsListeners.fetchData(Config{
+		got, gotErr := c.awsListeners.fetchData(context.TODO(), Config{
 			client: Client{
 				elbv2: c.elbv2Mock,
 			},
