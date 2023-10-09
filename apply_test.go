@@ -94,23 +94,28 @@ type clockMock struct{}
 
 func (c clockMock) Sleep(time.Duration) {}
 
-func NewDummyActions() []elbv2Types.Action {
-	return []elbv2Types.Action{
-		{
-			Type: elbv2Types.ActionTypeEnumForward,
-			ForwardConfig: &elbv2Types.ForwardActionConfig{
-				TargetGroups: []elbv2Types.TargetGroupTuple{
-					{
-						TargetGroupArn: aws.String("oldTarget"),
-						Weight:         aws.Int32(50),
-					},
-					{
-						TargetGroupArn: aws.String("newTarget"),
-						Weight:         aws.Int32(50),
-					},
+func NewDummyForwardAction() elbv2Types.Action {
+	return elbv2Types.Action{
+		Type: elbv2Types.ActionTypeEnumForward,
+		ForwardConfig: &elbv2Types.ForwardActionConfig{
+			TargetGroups: []elbv2Types.TargetGroupTuple{
+				{
+					TargetGroupArn: aws.String("oldTarget"),
+					Weight:         aws.Int32(50),
+				},
+				{
+					TargetGroupArn: aws.String("newTarget"),
+					Weight:         aws.Int32(50),
 				},
 			},
 		},
+	}
+}
+
+func NewDummyAuthOidcAction() elbv2Types.Action {
+	return elbv2Types.Action{
+		Type:                   elbv2Types.ActionTypeEnumAuthenticateOidc,
+		AuthenticateOidcConfig: &elbv2Types.AuthenticateOidcActionConfig{},
 	}
 }
 

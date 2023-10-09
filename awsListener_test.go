@@ -17,12 +17,28 @@ func TestAwsListener_execSwitch(t *testing.T) {
 		Value: elbv2.DescribeListenersOutput{
 			Listeners: []elbv2Types.Listener{
 				{
-					ListenerArn:    aws.String("validTarget"),
-					DefaultActions: NewDummyActions(),
+					ListenerArn: aws.String("validTarget"),
+					DefaultActions: []elbv2Types.Action{
+						NewDummyAuthOidcAction(),
+						NewDummyForwardAction(),
+					},
 				},
 			},
 		},
 	}
+	noForwardDescribeListenersResult := elbv2MockDescribeListenersResult{
+		Value: elbv2.DescribeListenersOutput{
+			Listeners: []elbv2Types.Listener{
+				{
+					ListenerArn: aws.String("validTarget"),
+					DefaultActions: []elbv2Types.Action{
+						NewDummyAuthOidcAction(),
+					},
+				},
+			},
+		},
+	}
+
 	cases := []struct {
 		isError     bool
 		isForce     bool
@@ -43,6 +59,21 @@ func TestAwsListener_execSwitch(t *testing.T) {
 			},
 			elbv2Mock: elbv2Mock{
 				DescribeListenersResult: describeListenersResult,
+			},
+		},
+		{
+			isError: true,
+			isForce: false,
+			awsListener: AwsListener{
+				Name:   "success",
+				Target: "validTarget",
+				Switch: Switch{
+					Old: "oldTarget",
+					New: "newTarget",
+				},
+			},
+			elbv2Mock: elbv2Mock{
+				DescribeListenersResult: noForwardDescribeListenersResult,
 			},
 		},
 		{
@@ -131,8 +162,10 @@ func TestAwsListeners_fetchData(t *testing.T) {
 		Value: elbv2.DescribeListenersOutput{
 			Listeners: []elbv2Types.Listener{
 				{
-					ListenerArn:    aws.String("validTarget"),
-					DefaultActions: NewDummyActions(),
+					ListenerArn: aws.String("validTarget"),
+					DefaultActions: []elbv2Types.Action{
+						NewDummyForwardAction(),
+					},
 				},
 			},
 		},

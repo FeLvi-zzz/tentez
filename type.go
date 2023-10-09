@@ -49,25 +49,33 @@ func (s Switch) getType(t string) string {
 	}
 }
 
-func compactActions(targetSwitch Switch, targetWeight Weight) []elbv2Types.Action {
-	switch {
-	case targetWeight.Old == 0:
-		return []elbv2Types.Action{
-			{
+func makeNewActions(actions []elbv2Types.Action, targetSwitch Switch, targetWeight Weight) []elbv2Types.Action {
+	res := make([]elbv2Types.Action, len(actions))
+
+	for i, action := range actions {
+		if action.Type != elbv2Types.ActionTypeEnumForward {
+			if action.Type == elbv2Types.ActionTypeEnumAuthenticateOidc {
+				action.AuthenticateOidcConfig.UseExistingClientSecret = aws.Bool(true)
+			}
+			res[i] = action
+			continue
+		}
+
+		switch {
+		case targetWeight.Old == 0:
+			res[i] = elbv2Types.Action{
 				Type:           elbv2Types.ActionTypeEnumForward,
 				TargetGroupArn: aws.String(targetSwitch.New),
-			},
-		}
-	case targetWeight.New == 0:
-		return []elbv2Types.Action{
-			{
+				Order:          action.Order,
+			}
+		case targetWeight.New == 0:
+			res[i] = elbv2Types.Action{
 				Type:           elbv2Types.ActionTypeEnumForward,
 				TargetGroupArn: aws.String(targetSwitch.Old),
-			},
-		}
-	default:
-		return []elbv2Types.Action{
-			{
+				Order:          action.Order,
+			}
+		default:
+			res[i] = elbv2Types.Action{
 				Type: elbv2Types.ActionTypeEnumForward,
 				ForwardConfig: &elbv2Types.ForwardActionConfig{
 					TargetGroups: []elbv2Types.TargetGroupTuple{
@@ -81,9 +89,12 @@ func compactActions(targetSwitch Switch, targetWeight Weight) []elbv2Types.Actio
 						},
 					},
 				},
-			},
+				Order: action.Order,
+			}
 		}
 	}
+
+	return res
 }
 
 type Step struct {

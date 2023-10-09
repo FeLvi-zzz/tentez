@@ -17,7 +17,21 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 		Value: elbv2.DescribeRulesOutput{
 			Rules: []elbv2Types.Rule{
 				{
-					Actions: NewDummyActions(),
+					Actions: []elbv2Types.Action{
+						NewDummyAuthOidcAction(),
+						NewDummyForwardAction(),
+					},
+				},
+			},
+		},
+	}
+	noForwardDescribeRulesResult := elbv2MockDescribeRulesResult{
+		Value: elbv2.DescribeRulesOutput{
+			Rules: []elbv2Types.Rule{
+				{
+					Actions: []elbv2Types.Action{
+						NewDummyAuthOidcAction(),
+					},
 				},
 			},
 		},
@@ -43,6 +57,21 @@ func TestAwsListenerRule_execSwitch(t *testing.T) {
 			},
 			elbv2Mock: elbv2Mock{
 				DescribeRulesResult: describeRulesResult,
+			},
+		},
+		{
+			isError: true,
+			isForce: false,
+			awsListenerRule: AwsListenerRule{
+				Name:   "success",
+				Target: "validTarget",
+				Switch: Switch{
+					Old: "oldTarget",
+					New: "newTarget",
+				},
+			},
+			elbv2Mock: elbv2Mock{
+				DescribeRulesResult: noForwardDescribeRulesResult,
 			},
 		},
 		{
@@ -169,7 +198,9 @@ func TestAwsListenerRules_fetchData(t *testing.T) {
 						Rules: []elbv2Types.Rule{
 							{
 								RuleArn: aws.String("validTarget"),
-								Actions: NewDummyActions(),
+								Actions: []elbv2Types.Action{
+									NewDummyForwardAction(),
+								},
 							},
 						},
 					},
