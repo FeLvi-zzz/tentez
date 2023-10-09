@@ -1,39 +1,37 @@
 package tentez
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"os"
 	"sync"
 	"time"
 )
 
-func pause(cfg Config) {
-	fmt.Fprintln(cfg.io.out, "Pause")
-	fmt.Fprintln(cfg.io.out, `enter "yes", continue steps.`)
-	fmt.Fprintln(cfg.io.out, `If you'd like to interrupt steps, enter "quit".`)
+func (t tentez) pause() {
+	t.ui.Outputln("Pause")
+	t.ui.Outputln(`enter "yes", continue steps.`)
+	t.ui.Outputln(`If you'd like to interrupt steps, enter "quit".`)
 
 	for {
-		input := ""
-		fmt.Fprint(cfg.io.out, "> ")
-		fmt.Fscan(cfg.io.in, &input)
+		input := t.ui.Ask("> ")
 
 		if input == "yes" {
-			fmt.Fprintln(cfg.io.out, "continue step")
+			t.ui.Outputln("continue step")
 			break
 		} else if input == "quit" {
-			fmt.Fprintln(cfg.io.out, "Bye")
+			t.ui.Outputln("Bye")
 			os.Exit(0)
 		}
 	}
 }
 
-func sleep(sec int, cfg Config) {
+func (t tentez) sleep(sec int) {
 	seconds := time.Duration(sec) * time.Second
 	finishAt := time.Now().Add(seconds)
 
-	fmt.Fprintf(cfg.io.out, "Sleep %ds\n", sec)
-	fmt.Fprintf(cfg.io.out, "Resume at %s\n", finishAt.Format("2006-01-02 15:04:05"))
+	t.ui.Outputf("Sleep %ds\n", sec)
+	t.ui.Outputf("Resume at %s\n", finishAt.Format("2006-01-02 15:04:05"))
 
 	var wg sync.WaitGroup
 
@@ -46,11 +44,11 @@ func sleep(sec int, cfg Config) {
 
 		for {
 			select {
-			case t := <-ticker.C:
-				fmt.Fprintf(cfg.io.out, "\rRemain: %ds ", int(finishAt.Sub(t).Seconds()))
+			case tk := <-ticker.C:
+				t.ui.Outputf("\rRemain: %ds ", int(finishAt.Sub(tk).Seconds()))
 
 			case <-tickerStop:
-				fmt.Fprintln(cfg.io.out, "\a")
+				t.ui.Outputln("\a")
 				return
 			}
 		}
@@ -60,37 +58,37 @@ func sleep(sec int, cfg Config) {
 	go func() {
 		defer wg.Done()
 
-		cfg.clock.Sleep(seconds)
+		t.config.clock.Sleep(seconds)
 		ticker.Stop()
 		tickerStop <- true
 	}()
 
 	wg.Wait()
 
-	fmt.Fprintln(cfg.io.out, "Resume")
+	t.ui.Outputln("Resume")
 }
 
-func execSwitch(targets map[TargetType]Targets, weight Weight, isForce bool, cfg Config) error {
-	fmt.Fprintf(cfg.io.out, "Switch old:new = %d:%d\n", weight.Old, weight.New)
+func (t tentez) execSwitch(ctx context.Context, weight Weight, isForce bool) error {
+	t.ui.Outputf("Switch old:new = %d:%d\n", weight.Old, weight.New)
 
 	i := 0
-	for _, targetResouces := range targets {
+	for _, targetResouces := range t.Targets {
 		for _, target := range targetResouces.targetsSlice() {
 			i++
 
-			fmt.Fprintf(cfg.io.out, "%d. %s ", i, target.getName())
-			if err := target.execSwitch(weight, isForce, cfg); err != nil {
+			t.ui.Outputf("%d. %s ", i, target.getName())
+			if err := target.execSwitch(ctx, weight, isForce, t.config); err != nil {
 				if !errors.As(err, &SkipSwitchError{}) {
 					return err
 				}
-				fmt.Fprintln(cfg.io.out, err.Error())
+				t.ui.Outputln(err.Error())
 			} else {
-				fmt.Fprintln(cfg.io.out, "switched!")
+				t.ui.Outputln("switched!")
 			}
 		}
 	}
 
-	fmt.Fprintf(cfg.io.out, "Switched at %s\n", time.Now().Format("2006-01-02 15:04:05"))
+	t.ui.Outputf("Switched at %s\n", time.Now().Format("2006-01-02 15:04:05"))
 
 	return nil
 }

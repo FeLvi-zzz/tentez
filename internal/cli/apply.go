@@ -12,7 +12,9 @@ var applyCmd = &cobra.Command{
 # show plan and apply
 $ tentez -f ./examples/example.yaml apply`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		t, err := tentez.NewFromYaml(filename)
+		ctx := cmd.Context()
+
+		t, err := tentez.NewFromYaml(ctx, filename)
 		if err != nil {
 			return err
 		}
@@ -20,7 +22,7 @@ $ tentez -f ./examples/example.yaml apply`,
 		if err := t.Plan(); err != nil {
 			return err
 		}
-		return t.Apply(false)
+		return t.Apply(ctx, false)
 	},
 }
 

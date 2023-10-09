@@ -14,7 +14,9 @@ var switchCmd = &cobra.Command{
 # show plan and switch
 $ tentez -f ./examples/example.yaml switch --weight 30,70`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		t, err := tentez.NewFromYaml(filename)
+		ctx := cmd.Context()
+
+		t, err := tentez.NewFromYaml(ctx, filename)
 		if err != nil {
 			return err
 		}
@@ -23,7 +25,7 @@ $ tentez -f ./examples/example.yaml switch --weight 30,70`,
 			return fmt.Errorf("the length of weights must be 2, got %v, len: %d", weights, len(weights))
 		}
 
-		return t.Switch(weights, !noPause)
+		return t.Switch(ctx, weights, !noPause)
 	},
 }
 

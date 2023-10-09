@@ -1,22 +1,26 @@
 package tentez
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 )
 
 type Tentez interface {
 	Plan() error
-	Apply(isForce bool) error
-	Get() (map[TargetType]TargetsData, error)
-	Rollback(hasPause bool) error
-	Switch(weights []int, hasPause bool) error
+	Apply(ctx context.Context, isForce bool) error
+	Get(ctx context.Context) (map[TargetType]TargetsData, error)
+	Rollback(ctx context.Context, hasPause bool) error
+	Switch(wctx context.Context, eights []int, hasPause bool) error
 }
 
 type tentez struct {
 	Targets map[TargetType]Targets
 	Steps   []Step
 	config  Config
+	ui      Ui
 }
 
 var (
@@ -66,8 +70,8 @@ var (
 	}
 )
 
-func New(targets map[TargetType]Targets, steps []Step) (tentez, error) {
-	config, err := NewConfig()
+func New(ctx context.Context, targets map[TargetType]Targets, steps []Step) (tentez, error) {
+	config, err := NewConfig(ctx)
 	if err != nil {
 		return tentez{}, err
 	}
@@ -76,20 +80,25 @@ func New(targets map[TargetType]Targets, steps []Step) (tentez, error) {
 		Targets: targets,
 		Steps:   steps,
 		config:  config,
+		ui: &cui{
+			in:  os.Stdin,
+			out: os.Stdout,
+			err: os.Stderr,
+		},
 	}, nil
 }
 
-func (t tentez) Apply(isForce bool) (err error) {
+func (t tentez) Apply(ctx context.Context, isForce bool) (err error) {
 	for i, step := range t.Steps {
-		fmt.Fprintf(t.config.io.out, "\n%d / %d steps\n", i+1, len(t.Steps))
+		t.ui.Outputf("\n%d / %d steps\n", i+1, len(t.Steps))
 
 		switch step.Type {
 		case StepTypePause:
-			pause(t.config)
+			t.pause()
 		case StepTypeSleep:
-			sleep(step.SleepSeconds, t.config)
+			t.sleep(step.SleepSeconds)
 		case StepTypeSwitch:
-			err = execSwitch(t.Targets, step.Weight, isForce, t.config)
+			err = t.execSwitch(ctx, step.Weight, isForce)
 		default:
 			return fmt.Errorf(`unknown step type "%s"`, step.Type)
 		}
@@ -98,10 +107,10 @@ func (t tentez) Apply(isForce bool) (err error) {
 			return err
 		}
 
-		fmt.Fprintln(t.config.io.out, "")
+		t.ui.Outputln("")
 	}
 
-	fmt.Fprintln(t.config.io.out, "Apply complete!")
+	t.ui.Outputln("Apply complete!")
 
 	return nil
 }
@@ -134,17 +143,21 @@ func (t tentez) Plan() error {
 		}
 	}
 
-	fmt.Fprint(t.config.io.out, output.String())
+	t.ui.Outputf(output.String())
 
 	return nil
 }
 
-func (t tentez) Get() (targetsMap map[TargetType]TargetsData, err error) {
+func (t tentez) Get(ctx context.Context) (targetsMap map[TargetType]TargetsData, err error) {
 	mapData := map[TargetType]TargetsData{}
 	for targetType, targetResources := range t.Targets {
-		data, err := targetResources.fetchData(t.config)
+		data, err := targetResources.fetchData(ctx, t.config)
 		if err != nil {
-			return nil, err
+			if errors.Is(err, &FailedFetchTargetGroupsError{}) {
+				t.ui.OutputErrln(err.Error())
+			} else {
+				return nil, err
+			}
 		}
 		if data == nil {
 			continue
@@ -155,7 +168,7 @@ func (t tentez) Get() (targetsMap map[TargetType]TargetsData, err error) {
 	return mapData, nil
 }
 
-func (t tentez) Rollback(hasPause bool) (err error) {
+func (t tentez) Rollback(ctx context.Context, hasPause bool) (err error) {
 	t.Steps = []Step{}
 
 	if hasPause {
@@ -175,10 +188,10 @@ func (t tentez) Rollback(hasPause bool) (err error) {
 	if err = t.Plan(); err != nil {
 		return err
 	}
-	return t.Apply(true)
+	return t.Apply(ctx, true)
 }
 
-func (t tentez) Switch(weights []int, hasPause bool) (err error) {
+func (t tentez) Switch(ctx context.Context, weights []int, hasPause bool) (err error) {
 	t.Steps = []Step{}
 
 	if hasPause {
@@ -198,5 +211,5 @@ func (t tentez) Switch(weights []int, hasPause bool) (err error) {
 	if err = t.Plan(); err != nil {
 		return err
 	}
-	return t.Apply(false)
+	return t.Apply(ctx, false)
 }

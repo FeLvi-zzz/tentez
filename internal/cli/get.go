@@ -15,12 +15,13 @@ var getCmd = &cobra.Command{
 # Show current state of targets
 $ tentez -f ./examples/example.yaml get`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		t, err := tentez.NewFromYaml(filename)
+		ctx := cmd.Context()
+		t, err := tentez.NewFromYaml(ctx, filename)
 		if err != nil {
 			return err
 		}
 
-		dataMap, err := t.Get()
+		dataMap, err := t.Get(ctx)
 		if err != nil {
 			return err
 		}

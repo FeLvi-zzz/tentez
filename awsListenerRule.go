@@ -3,7 +3,6 @@ package tentez
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -25,11 +24,8 @@ type AwsListenerRuleData struct {
 	AdditionalActions []elbv2Types.ActionTypeEnum `yaml:"additional_actions,omitempty"`
 }
 
-func (r AwsListenerRule) execSwitch(targetWeight Weight, isForce bool, cfg Config) error {
-	// avoid rate limit
-	cfg.clock.Sleep(1 * time.Second)
-
-	ruleData, err := cfg.client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
+func (r AwsListenerRule) execSwitch(ctx context.Context, targetWeight Weight, isForce bool, cfg Config) error {
+	ruleData, err := cfg.client.elbv2.DescribeRules(ctx, &elbv2.DescribeRulesInput{
 		RuleArns: []string{r.Target},
 	})
 	if err != nil {
@@ -70,7 +66,7 @@ func (r AwsListenerRule) execSwitch(targetWeight Weight, isForce bool, cfg Confi
 		}
 	}
 
-	_, err = cfg.client.elbv2.ModifyRule(context.TODO(), &elbv2.ModifyRuleInput{
+	_, err = cfg.client.elbv2.ModifyRule(ctx, &elbv2.ModifyRuleInput{
 		RuleArn: aws.String(r.Target),
 		Actions: makeNewActions(rule.Actions, r.Switch, targetWeight),
 	})
@@ -82,7 +78,7 @@ func (r AwsListenerRule) getName() string {
 	return r.Name
 }
 
-func (rs AwsListenerRules) fetchData(cfg Config) (TargetsData, error) {
+func (rs AwsListenerRules) fetchData(ctx context.Context, cfg Config) (TargetsData, error) {
 	if len(rs) == 0 {
 		return nil, nil
 	}
@@ -96,17 +92,14 @@ func (rs AwsListenerRules) fetchData(cfg Config) (TargetsData, error) {
 		ruleMap[rule.Target] = rule
 	}
 
-	for _, tgArnsBatch := range chunk(tgArns, maxDescribeTargetGroupsItems) {
-		if _, err := cfg.client.elbv2.DescribeTargetGroups(context.TODO(), &elbv2.DescribeTargetGroupsInput{
-			TargetGroupArns: tgArnsBatch,
-		}); err != nil {
-			fmt.Fprintln(cfg.io.err, err.Error())
-		}
+	errTgs, err := checkTargetGroupsExistense(ctx, cfg.client.elbv2, tgArns)
+	if err != nil {
+		return nil, err
 	}
 
 	rules := []elbv2Types.Rule{}
 	for _, ruleArnsBatch := range chunk(ruleArns, maxDescribeRulesItems) {
-		rulesOutput, err := cfg.client.elbv2.DescribeRules(context.TODO(), &elbv2.DescribeRulesInput{
+		rulesOutput, err := cfg.client.elbv2.DescribeRules(ctx, &elbv2.DescribeRulesInput{
 			RuleArns: ruleArnsBatch,
 		})
 		if err != nil {
@@ -148,7 +141,7 @@ func (rs AwsListenerRules) fetchData(cfg Config) (TargetsData, error) {
 		}
 	}
 
-	return res, nil
+	return res, NewFailedFetchTargetGroupsError(errTgs)
 }
 
 func (rs AwsListenerRules) targetsSlice() (targets []Target) {
