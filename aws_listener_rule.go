@@ -33,7 +33,7 @@ func (r AwsListenerRule) execSwitch(ctx context.Context, targetWeight Weight, is
 	}
 
 	rule := ruleData.Rules[0]
-	if rule.IsDefault {
+	if aws.ToBool(rule.IsDefault) {
 		return fmt.Errorf("this is a default listener rule. Use `aws_listeners`")
 	}
 
@@ -111,7 +111,7 @@ func (rs AwsListenerRules) fetchData(ctx context.Context, cfg Config) (TargetsDa
 	res := []AwsListenerRuleData{}
 
 	for _, rule := range rules {
-		if rule.IsDefault {
+		if aws.ToBool(rule.IsDefault) {
 			return nil, fmt.Errorf("%s is a default listener rule. Use `aws_listeners`", aws.ToString(rule.RuleArn))
 		}
 

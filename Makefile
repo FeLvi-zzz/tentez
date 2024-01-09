@@ -23,6 +23,15 @@ GO_FILES:=$(shell find . -type f -name '*.go' -print)
 
 .PHONY: build build_all clean
 
+fmt:
+	go fmt ./...
+
+vet:
+	go vet ./...
+
+test: fmt vet
+	go test ./... -coverprofile cover.out
+
 build_all: $(BUILD_TARGETS)
 
 build-linux-arm64:

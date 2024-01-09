@@ -78,7 +78,7 @@ func TestGenerateConfigFromResourceTags(t *testing.T) {
 								Value: elbv2.DescribeRulesOutput{
 									Rules: []elbv2Types.Rule{
 										{
-											IsDefault: true,
+											IsDefault: aws.Bool(true),
 											RuleArn:   aws.String("default_rule_arn"),
 											Priority:  aws.String("default"),
 											Actions: []elbv2Types.Action{

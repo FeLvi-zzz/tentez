@@ -100,7 +100,7 @@ func GenerateConfigFromResourceTags(
 					}
 					for _, tg := range action.ForwardConfig.TargetGroups {
 						if tgArn == *tg.TargetGroupArn && (tg.Weight == nil || *tg.Weight > 0) {
-							if rule.IsDefault {
+							if aws.ToBool(rule.IsDefault) {
 								yaml.AwsListeners = append(yaml.AwsListeners, AwsListener{
 									Name:   fmt.Sprintf("%s:%d, %s", lbName, *listener.Port, switchMapKey),
 									Target: aws.ToString(listener.ListenerArn),
