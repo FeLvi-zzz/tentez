@@ -3,7 +3,8 @@ name: Build image
 on:
   push:
     branches: [main]
-  pull_request:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
 
 env:
   PLATFORMS: linux/amd64,linux/arm64
