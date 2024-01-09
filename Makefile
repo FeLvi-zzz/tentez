@@ -23,13 +23,10 @@ GO_FILES:=$(shell find . -type f -name '*.go' -print)
 
 .PHONY: build build_all clean
 
-fmt:
-	go fmt ./...
+lint: golangci-lint
+	$(GOLANGCI_LINT) run
 
-vet:
-	go vet ./...
-
-test: fmt vet
+test: lint
 	go test ./... -coverprofile cover.out
 
 build_all: $(BUILD_TARGETS)
@@ -56,3 +53,15 @@ $(BINARIES): $(GO_FILES)
 	
 clean:
 	rm $(BINARIES)*
+
+## Location to install dependencies to
+LOCALBIN ?= $(shell pwd)/bin
+$(LOCALBIN):
+	mkdir -p $(LOCALBIN)
+
+## Tool Binaries
+GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
+
+golangci-lint: $(GOLANGCI_LINT)
+$(GOLANGCI_LINT): $(LOCALBIN)
+	GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest

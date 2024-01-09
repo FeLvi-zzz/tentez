@@ -12,7 +12,7 @@ env:
   PLATFORMS: linux/amd64,linux/arm64
 
 jobs:
-  server-image-build:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
