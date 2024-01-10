@@ -37,3 +37,16 @@ jobs:
         with:
           version: v1.55
           args: --timeout=5m
+
+  asset-test-build:
+    name: test build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          go-version: "1.21"
+
+      - name: Build
+        run: make build_all
