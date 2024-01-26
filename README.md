@@ -3,6 +3,7 @@
 Tentez helps you switching traffic.
 
 ## Installation
+
 If you don't want to build from source go grab a [binary release](https://github.com/FeLvi-zzz/tentez/releases).
 
 or use `go install`
@@ -12,6 +13,7 @@ $ go install github.com/FeLvi-zzz/tentez/cmd/tentez@latest
 ```
 
 ## Usage
+
 ```console
 # show plan
 $ tentez -f ./examples/example.yaml plan
@@ -177,10 +179,11 @@ $ tentez generate-config tfplanjson -f ./tfplan.json -o tentez.yaml
 ```
 
 For instance, you can generate a config from the below terraform diff.
+
 ```diff
  resource "aws_lb_listener" "example" {
    ...
- 
+
    default_action {
      type             = "forward"
 -    target_group_arn = aws_lb_target_group.old.arn
@@ -196,7 +199,15 @@ $ tentez generate-config resource-tag -f examples/tentez.ResourceTag.v1beta1.yam
 
 Refer examples/tentez.ResourceTag.v1beta1.yaml.
 
-# available resources
+### Assume other IAM Role
+
+```console
+# set `AWS_ASSUME_ROLE_ARN` environment variable
+$ AWS_ASSUME_ROLE_ARN=[IAM_ROLE_ARN] tentez -f ./examples/example.yaml get
+```
+
+## Available resources
+
 - AWS
   - Listener
     - forward target group. for default LB listener rule.
@@ -204,6 +215,7 @@ Refer examples/tentez.ResourceTag.v1beta1.yaml.
     - forward target group. for except default LB listner rule.
 
 ## Why is named "Tentez"?
+
 A `tentetsuki` is `railroad switch` in Japanese. It is a mechanical device used to guide trains from one track to another. This tool switches traffic, like a "tentetsuki".
 
 "Tentez" pronounces "ten-tets".
