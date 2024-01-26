@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         arrays:
-          - image: ghcr.io/${{ github.repository_owner }}/${{ github.repository }}
+          - image: ghcr.io/${{ github.repository }}
             context: .
             dockerfile: Dockerfile
             push: "true"
