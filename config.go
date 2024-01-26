@@ -2,13 +2,20 @@ package tentez
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	rgt "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+)
+
+const (
+	awsAssumeRoleARNEnvKey = "AWS_ASSUME_ROLE_ARN"
 )
 
 type elbv2Client interface {
@@ -43,6 +50,13 @@ func NewConfig(ctx context.Context) (Config, error) {
 	}))
 	if err != nil {
 		return Config{}, err
+	}
+
+	assumeRoleARN := os.Getenv(awsAssumeRoleARNEnvKey)
+	if assumeRoleARN != "" {
+		stsSvc := sts.NewFromConfig(cfg)
+		creds := stscreds.NewAssumeRoleProvider(stsSvc, assumeRoleARN)
+		cfg.Credentials = aws.NewCredentialsCache(creds)
 	}
 
 	elbv2svc := elbv2.NewFromConfig(cfg)
