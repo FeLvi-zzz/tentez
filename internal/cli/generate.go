@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -69,9 +71,15 @@ $ tentez generate-config tfplanjson -f ./tfplan.json -o tentez.yaml`,
 			return fmt.Errorf("cannot generate config: %w", err)
 		}
 
-		configYamlBytes, err := yaml.Marshal(configYaml)
-		if err != nil {
+		var b bytes.Buffer
+		yamlEnc := yaml.NewEncoder(&b)
+		yamlEnc.SetIndent(2)
+		if err := yamlEnc.Encode(configYaml); err != nil {
 			return fmt.Errorf("cannot marshal config yaml: %w", err)
+		}
+		configYamlBytes, err := io.ReadAll(&b)
+		if err != nil {
+			return fmt.Errorf("cannot read bytes: %w", err)
 		}
 
 		if output == "" {
