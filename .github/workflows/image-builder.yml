@@ -57,7 +57,7 @@ jobs:
           version: v0.12.0
 
       - name: Build OCI image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.arrays.context }}
           file: ${{ matrix.arrays.dockerfile }}
