@@ -40,6 +40,6 @@ jobs:
         run: make build_all
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: dist/*
