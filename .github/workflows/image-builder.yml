@@ -32,7 +32,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install regctl
-        uses: iarekylew00t/regctl-installer@v1
+        uses: iarekylew00t/regctl-installer@v3
 
       - name: Docker metadata
         id: meta
