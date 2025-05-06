@@ -142,7 +142,7 @@ func GenerateConfigFromTerraformPlanJsons(jsons []TerraformPlanJson) (YamlStruct
 func getAwsListenersFromTerraformJson(tfplanjson TerraformPlanJson) ([]AwsListener, error) {
 	awsListeners := []AwsListener{}
 	for _, resourceChange := range tfplanjson.ResourceChanges {
-		if !(resourceChange.Change.Actions.IsUpdate() && resourceChange.Type == "aws_lb_listener") {
+		if !resourceChange.Change.Actions.IsUpdate() || resourceChange.Type != "aws_lb_listener" {
 			continue
 		}
 
@@ -185,7 +185,7 @@ func getAwsListenersFromTerraformJson(tfplanjson TerraformPlanJson) ([]AwsListen
 func getAwsListenerRulesFromTerraformJson(tfplanjson TerraformPlanJson) ([]AwsListenerRule, error) {
 	awsListenerRules := []AwsListenerRule{}
 	for _, resourceChange := range tfplanjson.ResourceChanges {
-		if !(resourceChange.Change.Actions.IsUpdate() && resourceChange.Type == "aws_lb_listener_rule") {
+		if !resourceChange.Change.Actions.IsUpdate() || resourceChange.Type != "aws_lb_listener_rule" {
 			continue
 		}
 

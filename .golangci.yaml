@@ -1,5 +1,9 @@
+version: "2"
 linters:
-  # Enable specific linter
-  # https://golangci-lint.run/usage/linters/#enabled-by-default
+  exclusions:
+    generated: lax
+formatters:
   enable:
     - goimports
+  exclusions:
+    generated: lax
