@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 
 	"github.com/FeLvi-zzz/tentez"
+	"github.com/goccy/go-yaml"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 var filenames = []string{}
