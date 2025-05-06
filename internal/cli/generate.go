@@ -72,8 +72,7 @@ $ tentez generate-config tfplanjson -f ./tfplan.json -o tentez.yaml`,
 		}
 
 		var b bytes.Buffer
-		yamlEnc := yaml.NewEncoder(&b)
-		yamlEnc.SetIndent(2)
+		yamlEnc := yaml.NewEncoder(&b, yaml.Indent(2))
 		if err := yamlEnc.Encode(configYaml); err != nil {
 			return fmt.Errorf("cannot marshal config yaml: %w", err)
 		}
