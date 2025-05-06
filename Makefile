@@ -50,7 +50,7 @@ build: $(BINARIES)
 
 $(BINARIES): $(GO_FILES)
 	CGO_ENABLED=0 go build -ldflags="-X github.com/FeLvi-zzz/tentez.Revision=$(shell git rev-parse --short HEAD)" -o $@-$(GOOS)-$(GOARCH)$(SUFFIX) $(@:$(BINDIR)/%=$(ROOT_PACKAGE)/cmd/%)
-	
+
 clean:
 	rm $(BINARIES)*
 
@@ -64,4 +64,4 @@ GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 
 golangci-lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest

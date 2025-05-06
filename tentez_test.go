@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/FeLvi-zzz/tentez"
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 func Example() {
