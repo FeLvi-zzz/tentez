@@ -54,7 +54,6 @@ jobs:
         with:
           platforms: ${{ env.PLATFORMS }}
           endpoint: builders
-          version: v0.12.0
 
       - name: Build OCI image
         uses: docker/build-push-action@v6
