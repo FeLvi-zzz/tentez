@@ -55,6 +55,23 @@ jobs:
           platforms: ${{ env.PLATFORMS }}
           endpoint: builders
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: build binaries
+        run: |
+          set -eux
+
+          targets=()
+
+          IFS=',' read -ra platforms <<< "${{ env.PLATFORMS }}"
+          for platform in "${platforms[@]}"; do
+            targets+=("build-${platform%%/*}-${platform##*/}")
+          done
+
+          make build_all BUILD_TARGETS="${targets[@]}"
+
       - name: Build OCI image
         uses: docker/build-push-action@v6
         with:

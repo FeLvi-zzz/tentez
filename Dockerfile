@@ -1,26 +1,19 @@
-FROM golang:1.24.2 AS builder
+FROM gcr.io/distroless/static:nonroot
 
-ARG TARGETOS=linux
-ARG TARGETARCH=amd64
+# TARGETOS and TARGETARCH are automatically set by buildkit if `--platform` is passed
+# https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/reference.md#automatic-platform-args-in-the-global-scope
+ARG TARGETOS
+ARG TARGETARCH
+
 ARG REVISION=unknown
 
-WORKDIR /app
-COPY go.mod .
-COPY go.sum .
-RUN go mod download
+WORKDIR /
 
-COPY cmd/ cmd/
-COPY internal/ internal/
-COPY *.go .
-
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -ldflags="-X github.com/FeLvi-zzz/tentez.Revision=${REVISION}" -o tentez ./cmd/tentez/main.go
-
-FROM gcr.io/distroless/static:nonroot
+# NOTE: require the pre-built binaries in dist/
+COPY dist/tentez-${TARGETOS}-${TARGETARCH} /tentez
 
 LABEL org.opencontainers.image.title="FeLvi-zzz/tentez"
 
-WORKDIR /
-COPY --from=builder /app/tentez /tentez
 USER 65532:65532
 
 ENTRYPOINT ["/tentez"]
