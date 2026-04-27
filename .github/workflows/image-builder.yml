@@ -73,7 +73,7 @@ jobs:
           make build_all BUILD_TARGETS="${targets[@]}"
 
       - name: Build OCI image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.arrays.context }}
           file: ${{ matrix.arrays.dockerfile }}
