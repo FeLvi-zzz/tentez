@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.19
-	github.com/goccy/go-yaml v1.17.1
+	github.com/goccy/go-yaml v1.19.2
 	github.com/spf13/cobra v1.9.1
 )
 
